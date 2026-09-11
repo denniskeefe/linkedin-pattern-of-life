@@ -5,3 +5,4 @@ embed.json
 *.pdf
 public/
 .vercel
+.env*

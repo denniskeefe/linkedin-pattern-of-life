@@ -420,6 +420,65 @@ td.txt { color: var(--ink-2); min-width: 230px; }
 
 .notes b { color: var(--ink); font-weight: 600; }
 
+
+/* ---------- print / PDF ---------- */
+
+@page {
+  size: letter landscape;
+  margin: 0.45in;
+}
+
+@media print {
+  /* Always print on white, whatever theme the screen was showing. */
+  :root, :root[data-theme="dark"] {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f2f5f8;
+    --line: #c9d2dc;
+    --line-soft: #e3e8ee;
+    --ink: #11161d;
+    --ink-2: #454f5c;
+    --ink-3: #6b7684;
+    --accent: #1f5fac;
+    --accent-2: #c9501f;
+    --accent-weak: #e7f0fc;
+    --s1: #cde2fb; --s2: #9ec5f4; --s3: #6da7ec;
+    --s4: #3987e5; --s5: #256abf; --s6: #0d366b;
+    --grid-empty: #eef1f5;
+    --shadow: none;
+  }
+
+  body { background: #fff; font-size: 13px; }
+
+  .wrap {
+    max-width: 100%;
+    padding: 0;
+    gap: 20px;
+  }
+
+  /* Keep prose at a readable measure even on a landscape sheet. */
+  .dek, .sec-head p, .notes p { max-width: 92ch; }
+
+  .panel { box-shadow: none; overflow: visible; }
+
+  /* Nothing that carries a chart or a figure may straddle a page. */
+  .panel, .finding, .findings, .duo, section, .notes, .masthead {
+    break-inside: avoid;
+  }
+  .sec-head { break-after: avoid; }
+
+  /* The event log is collapsed on screen; in print it is the appendix. */
+  details { break-before: page; border: none; }
+  details > summary { display: none; }
+  .tablewrap { overflow: visible; border-top: none; }
+  table th { position: static; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+
+  #tip { display: none !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
@@ -944,6 +1003,17 @@ td.txt { color: var(--ink-2); min-width: 230px; }
     }
     s.appendChild(txt("average reactions per event · hour of day, local", padL, H - 6, { size: 10 }));
     document.getElementById("c-eng").appendChild(s);
+  })();
+
+
+  // ---------- print ----------
+  (function () {
+    var log = document.querySelector("details");
+    if (!log) return;
+    function openForPrint() { log.open = true; }
+    window.addEventListener("beforeprint", openForPrint);
+    // Headless renderers do not always fire beforeprint; ?print=1 forces it.
+    if (/[?&#]print/.test(location.search + location.hash)) openForPrint();
   })();
 
   // ---------- table ----------

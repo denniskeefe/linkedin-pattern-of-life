@@ -54,6 +54,18 @@ Prints a summary, writes `activity.json`, and refreshes the dataset embedded in
 
 **3. Open `dashboard.html`.** No build step and no server; it is a single file.
 
+**4. Export a PDF** (optional):
+
+```bash
+./make_pdf.sh                      # -> linkedin-pattern-of-life.pdf
+./make_pdf.sh ~/Desktop/out.pdf    # or somewhere else
+```
+
+Renders through headless Chrome onto landscape Letter. The print stylesheet
+forces the light palette regardless of the screen theme, expands the event log
+into an appendix, and keeps charts from straddling page breaks. `Cmd+P` from the
+browser produces the same result.
+
 ```bash
 python3 analyze.py --tz Europe/London    # report in a different timezone
 python3 analyze.py other.psv             # read a different collection
@@ -103,6 +115,7 @@ The practical consequence: treat event counts as a floor, not a complete census.
 | `analyze.py` | Summary, `activity.json`, dashboard injection |
 | `activity.json` | Full parsed dataset, one object per event |
 | `dashboard.html` | Self-contained dashboard, data inlined |
+| `make_pdf.sh` | Renders the dashboard to PDF via headless Chrome |
 
 ## The dashboard
 
@@ -115,3 +128,4 @@ Five views, each answering a different question:
 - **Reach by hour** — average reactions per event, with sample sizes shown
 
 Light and dark themes, hover detail on every mark, and a full event log table.
+Prints to a seven-page landscape report, one chart per page.

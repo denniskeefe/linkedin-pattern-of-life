@@ -29,47 +29,59 @@ timezone. No estimation, no rounding to the nearest week.
 
 ## Usage
 
-**1. Collect.** Open your own activity page and paste `scrape.js` into the
+**1. Collect.** Open a profile's activity page and paste `scrape.js` into the
 DevTools console:
 
 ```
-https://www.linkedin.com/in/<you>/recent-activity/all/
+https://www.linkedin.com/in/<slug>/recent-activity/all/
 ```
 
 ```js
-await lkCollect({ days: 30 })   // run this two or three times — see below
-copy(lkExport())                // clipboard now holds the raw.psv contents
+lkSubject()                     // prints the slug and the file path to use
+await lkCollect({ days: 30 })   // run two or three times — see below
+copy(lkExport())
 ```
 
-Paste into `raw.psv`.
+Paste the clipboard into `subjects/<slug>/raw.psv`.
+
+Collecting a second profile? Reload the page and run `lkReset()` first. The
+store persists across calls by design, so without a reset two people's activity
+merges into one file.
 
 **2. Analyze.**
 
 ```bash
-python3 analyze.py --inject
+python3 analyze.py --subject <slug> --label "Their Name"
+python3 analyze.py --list                       # what has been collected
+python3 analyze.py --subject <slug> --tz Europe/London
 ```
 
-Prints a summary, writes `activity.json`, and refreshes the dataset embedded in
-`dashboard.html`.
+Each subject gets its own directory:
 
-**3. Open `dashboard.html`.** No build step and no server; it is a single file.
+```
+subjects/<slug>/raw.psv         collected events
+subjects/<slug>/meta.json       label, timezone, self flag — remembered
+subjects/<slug>/activity.json   parsed dataset
+subjects/<slug>/index.html      rendered dashboard
+```
+
+**3. Open `subjects/<slug>/index.html`.** No build step and no server.
+
+Every number and every sentence in a report is computed from that subject's own
+data — headline findings, the cadence description, the small-sample caveat.
+Nothing carries over between subjects.
 
 **4. Export a PDF** (optional):
 
 ```bash
-./make_pdf.sh                      # -> linkedin-pattern-of-life.pdf
-./make_pdf.sh ~/Desktop/out.pdf    # or somewhere else
+./make_pdf.sh                                    # the published dashboard
+./make_pdf.sh out.pdf subjects/<slug>/index.html # a specific subject
 ```
 
 Renders through headless Chrome onto landscape Letter. The print stylesheet
 forces the light palette regardless of the screen theme, expands the event log
 into an appendix, and keeps charts from straddling page breaks. `Cmd+P` from the
 browser produces the same result.
-
-```bash
-python3 analyze.py --tz Europe/London    # report in a different timezone
-python3 analyze.py other.psv             # read a different collection
-```
 
 Requires Python 3.9+ (for `zoneinfo`). No third-party packages.
 
@@ -106,6 +118,36 @@ anyone who has it.** This page maps when a named person is reliably online and
 when they are not, so gate it with Deployment Protection rather than relying on
 an unguessable URL.
 
+## Subjects other than your own
+
+The collector reads whatever activity page is open, so any profile you can view
+works the same way. Three consequences follow, and they are enforced rather than
+suggested:
+
+**Collected subjects stay local.** `subjects/` is gitignored. A third party's
+activity history does not belong in a repo, and a repo made public later is not
+a decision you want to have made by accident.
+
+**`--publish` refuses non-self subjects.** Copying a report onto the deployed
+surface requires that subject to be marked `--self`. Reports on other people are
+read on the machine that produced them.
+
+**Reports label themselves.** A subject not marked `--self` renders as
+`third-party subject` in the masthead and carries a note stating plainly what
+the page maps. A pattern-of-life report circulating without that framing invites
+exactly the wrong reading.
+
+Two matters that belong to the operator, not the tool:
+
+- **LinkedIn's terms prohibit automated collection.** Whether scraping public
+  pages is lawful and whether it breaches a contract you accepted are separate
+  questions. The practical exposure is account restriction, and it falls on the
+  account doing the collecting.
+- **Individual pattern-of-life needs a basis.** This output maps when a named
+  person is reliably reachable and — more useful to the wrong reader — when they
+  are not. Inside an authorized engagement that is a finding. Outside one it is
+  something else, and the data having been public does not change which.
+
 ## Scope and caveats
 
 - **Broadcast activity only.** The activity feed surfaces posts and reposts.
@@ -117,22 +159,20 @@ an unguessable URL.
   collection time. A post from four weeks ago has had four weeks to accumulate
   and today's has had hours, which biases any reach-over-time comparison toward
   older posts.
-- **Small samples.** Split 42 events across 24 hours and most hours hold one or
-  two. `analyze.py` marks those `(thin)` and the dashboard draws them as hollow
-  bars. They are anecdotes, not evidence.
-- **Your own account.** This reads a page you are already logged into and
-  authorized to view. It is not a tool for collecting on other people.
+- **Small samples.** Split a month of posting across 24 hours and most hours hold
+  one or two events. `analyze.py` marks those `(thin)` and the dashboard draws
+  them as hollow bars. They are anecdotes, not evidence.
 
 ## Files
 
 | File | |
 |---|---|
 | `scrape.js` | Console collector — multi-pass, virtualization-aware |
-| `raw.psv` | Collected events, pipe-delimited, oldest first |
-| `analyze.py` | Summary, `activity.json`, dashboard injection |
-| `activity.json` | Full parsed dataset, one object per event |
-| `dashboard.html` | Self-contained dashboard, data inlined |
-| `make_pdf.sh` | Renders the dashboard to PDF via headless Chrome |
+| `analyze.py` | Per-subject summary and dashboard rendering |
+| `template.html` | The report, with an empty data slot |
+| `subjects/<slug>/` | One directory per collected profile — **gitignored** |
+| `dashboard.html` | Rendered copy of the published subject |
+| `make_pdf.sh` | Renders a dashboard to PDF via headless Chrome |
 
 ## The dashboard
 

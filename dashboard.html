@@ -1,0 +1,965 @@
+<title>LinkedIn Pattern of Life</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+
+<style>
+:root {
+  color-scheme: light;
+  --bg:          #f4f6f8;
+  --surface:     #ffffff;
+  --surface-2:   #eef1f5;
+  --line:        #d8dee7;
+  --line-soft:   #e6eaf0;
+  --ink:         #11161d;
+  --ink-2:       #4a5462;
+  --ink-3:       #78828f;
+  --accent:      #2a78d6;
+  --accent-2:    #eb6834;
+  --accent-weak: #e7f0fc;
+
+  --s0: #e9eef5;
+  --s1: #cde2fb;
+  --s2: #9ec5f4;
+  --s3: #6da7ec;
+  --s4: #3987e5;
+  --s5: #256abf;
+  --s6: #0d366b;
+
+  --grid-empty: #e9ecf1;
+  --shadow: 0 1px 2px rgba(17,22,29,.05), 0 8px 24px -14px rgba(17,22,29,.18);
+
+  --f-display: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --f-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg:          #101319;
+    --surface:     #171c24;
+    --surface-2:   #1e242e;
+    --line:        #2c3543;
+    --line-soft:   #232a34;
+    --ink:         #e9edf3;
+    --ink-2:       #a5b0bf;
+    --ink-3:       #7b8697;
+    --accent:      #3987e5;
+    --accent-2:    #e8783f;
+    --accent-weak: #17263c;
+
+    --s0: #1a2330;
+    --s1: #1e3a5c;
+    --s2: #1c5cab;
+    --s3: #2a78d6;
+    --s4: #3987e5;
+    --s5: #6da7ec;
+    --s6: #9ec5f4;
+
+    --grid-empty: #1b212b;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.8);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:          #101319;
+  --surface:     #171c24;
+  --surface-2:   #1e242e;
+  --line:        #2c3543;
+  --line-soft:   #232a34;
+  --ink:         #e9edf3;
+  --ink-2:       #a5b0bf;
+  --ink-3:       #7b8697;
+  --accent:      #3987e5;
+  --accent-2:    #e8783f;
+  --accent-weak: #17263c;
+
+  --s0: #1a2330;
+  --s1: #1e3a5c;
+  --s2: #1c5cab;
+  --s3: #2a78d6;
+  --s4: #3987e5;
+  --s5: #6da7ec;
+  --s6: #9ec5f4;
+
+  --grid-empty: #1b212b;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.8);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+/* ---------- header ---------- */
+
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 26px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+h1 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.08;
+  letter-spacing: -.015em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.dek {
+  margin: 0;
+  max-width: 64ch;
+  color: var(--ink-2);
+  font-size: 16px;
+}
+
+.filebar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 2px;
+  background: var(--line-soft);
+  border: 1px solid var(--line-soft);
+}
+
+.filebar div {
+  background: var(--bg);
+  padding: 9px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.filebar dt {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.filebar dd {
+  margin: 0;
+  font-family: var(--f-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- findings ---------- */
+
+.findings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.finding {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 16px 17px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.finding.lead { border-left: 3px solid var(--accent); }
+
+.finding .num {
+  font-family: var(--f-mono);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.finding .num small {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-3);
+  letter-spacing: 0;
+}
+
+.finding .lbl {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.finding .note {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+
+/* ---------- panels ---------- */
+
+section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sec-head { display: flex; flex-direction: column; gap: 4px; }
+
+.sec-head h2 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: 21px;
+  margin: 0;
+  letter-spacing: -.01em;
+}
+
+.sec-head p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  max-width: 72ch;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+.duo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+  gap: 18px;
+}
+
+.panel h3 {
+  font-family: var(--f-body);
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0 0 2px;
+  color: var(--ink);
+}
+
+.panel .cap {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin: 0 0 14px;
+  line-height: 1.45;
+}
+
+svg { display: block; max-width: 100%; height: auto; overflow: visible; }
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-top: 13px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  color: var(--ink-2);
+  letter-spacing: .03em;
+}
+
+.key { display: inline-flex; align-items: center; gap: 6px; }
+.key i { width: 11px; height: 11px; border-radius: 2px; display: block; }
+
+.ramp { display: inline-flex; align-items: center; gap: 7px; }
+.ramp span { display: flex; gap: 2px; }
+.ramp span i { width: 17px; height: 10px; border-radius: 1px; display: block; }
+
+/* ---------- tooltip ---------- */
+
+#tip {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .1s;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 3px;
+  padding: 8px 10px;
+  font-family: var(--f-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  max-width: 270px;
+  box-shadow: 0 6px 20px -6px rgba(0,0,0,.5);
+}
+#tip b { font-weight: 600; }
+#tip .t-sub { color: var(--ink-3); }
+
+/* ---------- table ---------- */
+
+details {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+summary {
+  cursor: pointer;
+  padding: 14px 18px;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  list-style: none;
+}
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "▸ "; color: var(--accent); }
+details[open] summary::before { content: "▾ "; }
+summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.tablewrap { overflow-x: auto; border-top: 1px solid var(--line); }
+
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+
+th {
+  text-align: left;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  background: var(--surface-2);
+  position: sticky;
+  top: 0;
+}
+
+td {
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  vertical-align: top;
+}
+
+td.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.txt { color: var(--ink-2); min-width: 230px; }
+
+.pill {
+  display: inline-block;
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 2px;
+}
+.pill.post { background: var(--accent-weak); color: var(--accent); }
+.pill.repost { background: color-mix(in srgb, var(--accent-2) 14%, transparent); color: var(--accent-2); }
+
+/* ---------- notes ---------- */
+
+.notes {
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notes h2 {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0 0 4px;
+  font-weight: 500;
+}
+
+.notes p {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  max-width: 76ch;
+  line-height: 1.6;
+}
+
+.notes b { color: var(--ink); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Pattern-of-life analysis · self-collected</div>
+    <h1>LinkedIn Pattern of Life</h1>
+    <p class="dek">Every post and repost Dennis Keefe pushed to LinkedIn over a 31-day collection window, placed by exact publication time. Timestamps are decoded from LinkedIn's own activity identifiers, so they are precise to the second — not the "3w ago" the feed shows you.</p>
+    <dl class="filebar">
+      <div><dt>Subject</dt><dd>/in/dkeefe</dd></div>
+      <div><dt>Window</dt><dd>12 Aug – 11 Sep 2026</dd></div>
+      <div><dt>Events</dt><dd id="f-events">—</dd></div>
+      <div><dt>Timezone</dt><dd>America/Chicago</dd></div>
+      <div><dt>Collected</dt><dd>11 Sep 2026</dd></div>
+    </dl>
+  </header>
+
+  <div class="findings" id="findings"></div>
+
+  <section>
+    <div class="sec-head">
+      <h2>The week, hour by hour</h2>
+      <p>Each cell is one weekday–hour slot across the window. Darker means more activity landed in that slot. This is the chart that answers "when do I actually post?" — and the answer is a tight cluster, not a spread.</p>
+    </div>
+    <div class="panel">
+      <div id="c-grid"></div>
+      <div class="legend">
+        <span class="ramp">Events in slot
+          <span id="ramp-swatches"></span>
+          <span id="ramp-max"></span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <div class="duo">
+    <div class="panel">
+      <h3>Time of day</h3>
+      <p class="cap">All 42 events folded onto a single 24-hour clock.</p>
+      <div id="c-hour"></div>
+    </div>
+    <div class="panel">
+      <h3>Day of week</h3>
+      <p class="cap">Original posts and reposts, stacked.</p>
+      <div id="c-dow"></div>
+      <div class="legend">
+        <span class="key"><i style="background:var(--accent)"></i>Original post</span>
+        <span class="key"><i style="background:var(--accent-2)"></i>Repost</span>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <h2>The 31 days, one column each</h2>
+      <p>Cadence is bursty rather than steady: a handful of heavy days carry the month, with fourteen days of silence between them.</p>
+    </div>
+    <div class="panel">
+      <div id="c-days"></div>
+      <div class="legend">
+        <span class="key"><i style="background:var(--accent)"></i>Original post</span>
+        <span class="key"><i style="background:var(--accent-2)"></i>Repost</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Does posting time track with reach?</h2>
+      <p>Average reactions per event, grouped by the hour it went out. Read this one gently — most hours hold only one or two events, so the bars with faint fills are anecdotes, not evidence. Only the solid bars have enough behind them to argue with.</p>
+    </div>
+    <div class="panel">
+      <div id="c-eng"></div>
+      <div class="legend">
+        <span class="key"><i style="background:var(--accent)"></i>3 or more events (n≥3)</span>
+        <span class="key"><i style="background:var(--accent-weak);border:1px solid var(--accent)"></i>1–2 events — low confidence</span>
+      </div>
+    </div>
+  </section>
+
+  <details>
+    <summary>Event log — all 42 records</summary>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Local time</th><th>Day</th><th>Type</th><th>Reactions</th><th>Comments</th><th>Reposts</th><th>Opening text</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </details>
+
+  <div class="notes">
+    <h2>Collection notes &amp; caveats</h2>
+    <p><b>Timestamps are exact.</b> LinkedIn's activity IDs are snowflake identifiers — the high 41 bits are the publication time in milliseconds. Every time on this page is decoded from the ID itself and converted to America/Chicago, so it survives the feed's vague relative labels.</p>
+    <p><b>Engagement is a snapshot, not a final score.</b> Reaction and comment counts were read on 11 September 2026. Recent posts have had days to accumulate; the oldest have had a month. That alone biases the reach chart toward older posts.</p>
+    <p><b>This is broadcast activity, not total platform activity.</b> The activity feed surfaced posts and reposts only. Comments and reactions left on other people's posts are not counted here, so the real "active on LinkedIn" hours are almost certainly wider than what these charts show.</p>
+    <p><b>Collection is near-complete, not provably complete.</b> The public activity feed paginates non-deterministically — two independent sweeps of the same 31 days returned overlapping but non-identical sets, and this dataset is their union. A third sweep could surface a few more events. Treat counts as a floor.</p>
+  </div>
+
+</div>
+
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script id="data" type="application/json">[{"t":"2026-08-12T07:58","k":"post","r":17,"c":0,"p":2,"m":"image","x":"New blog post \"OSINT Lens\""},{"t":"2026-08-12T13:50","k":"repost","r":16,"c":3,"p":1,"m":"image","x":"His path to OSINT runs through nearly two decades"},{"t":"2026-08-12T18:50","k":"repost","r":83,"c":2,"p":14,"m":"image","x":"Mastering Visual OSINT: Turn pictures into intel"},{"t":"2026-08-12T20:59","k":"post","r":9,"c":0,"p":1,"m":"image","x":"OSINT Job Tracker Aug 12, 2026"},{"t":"2026-08-12T21:21","k":"repost","r":3,"c":0,"p":2,"m":"link","x":"New research platform and podcast coming soon"},{"t":"2026-08-13T08:27","k":"repost","r":9,"c":0,"p":3,"m":"image","x":"Now accepting Membership Applications! INWPIA.org"},{"t":"2026-08-13T09:56","k":"repost","r":95,"c":12,"p":6,"m":"image","x":"I pray this blesses people who are in the same season"},{"t":"2026-08-14T16:52","k":"repost","r":6,"c":0,"p":1,"m":"link","x":"New platform coming soon!!"},{"t":"2026-08-14T17:41","k":"post","r":6,"c":0,"p":0,"m":"image","x":"OSINT Job Tracker August 14, 2026"},{"t":"2026-08-14T18:22","k":"post","r":48,"c":3,"p":2,"m":"video","x":"I created the Chrome extension \"OSINT Lens\" because"},{"t":"2026-08-18T13:08","k":"repost","r":18,"c":1,"p":3,"m":"link","x":"I was recently a guest on a podcast"},{"t":"2026-08-18T18:26","k":"repost","r":29,"c":2,"p":5,"m":"image","x":"SPONSOR ALERT! We are incredibly excited to welcome"},{"t":"2026-08-18T19:04","k":"repost","r":18,"c":2,"p":2,"m":"video","x":"CareerByte - Quick Tip #5: Real Advice from the Tech"},{"t":"2026-08-18T19:24","k":"post","r":7,"c":0,"p":1,"m":"image","x":"OSINT Job Tracker August 18, 2026"},{"t":"2026-08-18T19:25","k":"repost","r":27,"c":6,"p":2,"m":"link","x":"Happy Taco Tuesday!!! I did a thing..."},{"t":"2026-08-18T21:17","k":"repost","r":17,"c":4,"p":1,"m":"image","x":"F1NDX is now a training partner of Intelligence for"},{"t":"2026-08-19T07:31","k":"post","r":141,"c":6,"p":12,"m":"image","x":"Private investigators: how much time do you spend"},{"t":"2026-08-19T19:30","k":"repost","r":3,"c":0,"p":2,"m":"link","x":"Ever wonder about how the real professionals do it"},{"t":"2026-08-23T08:20","k":"post","r":31,"c":3,"p":2,"m":"image","x":""},{"t":"2026-08-23T20:05","k":"repost","r":43,"c":0,"p":6,"m":"image","x":""},{"t":"2026-08-24T06:00","k":"post","r":20,"c":0,"p":1,"m":"image","x":""},{"t":"2026-08-24T06:15","k":"post","r":12,"c":2,"p":2,"m":"image","x":""},{"t":"2026-08-24T09:34","k":"post","r":13,"c":0,"p":2,"m":"image","x":""},{"t":"2026-08-25T04:47","k":"post","r":31,"c":2,"p":1,"m":"image","x":""},{"t":"2026-08-25T20:07","k":"post","r":4,"c":0,"p":1,"m":"image","x":"OSINT Job Tracker August 25, 2026"},{"t":"2026-08-25T20:09","k":"repost","r":23,"c":2,"p":3,"m":"image","x":"Member Spotlight: Brett Redman, OSC"},{"t":"2026-09-01T18:46","k":"post","r":18,"c":1,"p":1,"m":"image","x":"OSINT Job Tracker September 1, 2026"},{"t":"2026-09-03T06:00","k":"post","r":51,"c":1,"p":2,"m":"image","x":""},{"t":"2026-09-04T06:40","k":"post","r":58,"c":3,"p":4,"m":"image","x":""},{"t":"2026-09-06T08:07","k":"post","r":51,"c":7,"p":3,"m":"image","x":""},{"t":"2026-09-07T06:00","k":"post","r":33,"c":4,"p":1,"m":"image","x":""},{"t":"2026-09-08T06:00","k":"post","r":39,"c":2,"p":1,"m":"image","x":""},{"t":"2026-09-08T06:15","k":"post","r":7,"c":0,"p":0,"m":"image","x":"The Voight-Kampff test doesn't ask you who you are"},{"t":"2026-09-09T06:00","k":"post","r":22,"c":3,"p":3,"m":"image","x":""},{"t":"2026-09-10T11:01","k":"post","r":21,"c":0,"p":1,"m":"image","x":""},{"t":"2026-09-10T11:11","k":"repost","r":31,"c":4,"p":4,"m":"image","x":"F1NDX has established a partnership with OSINT"},{"t":"2026-09-10T11:22","k":"repost","r":84,"c":14,"p":3,"m":"image","x":"If you are looking to preorder my book Deep Dive"},{"t":"2026-09-10T11:52","k":"post","r":2,"c":0,"p":0,"m":"image","x":"OSINT Job Tracker September 10, 2026"},{"t":"2026-09-10T12:03","k":"post","r":8,"c":0,"p":0,"m":"image","x":"In the last 90 days, my Chrome extension \"OSINT Lens\""},{"t":"2026-09-10T13:24","k":"post","r":7,"c":0,"p":0,"m":"image","x":"Have you heard of a micro-school?"},{"t":"2026-09-11T06:00","k":"post","r":4,"c":0,"p":1,"m":"image","x":""},{"t":"2026-09-11T06:30","k":"post","r":1,"c":0,"p":0,"m":"image","x":"Do you use \"Have I Been Pwned?\""}]</script>
+
+<script>
+(function () {
+  "use strict";
+
+  var RAW = JSON.parse(document.getElementById("data").textContent);
+  var DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  var DOWFULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+  // "2026-08-12T07:58" -> parts, read as wall-clock local-to-Chicago (already converted)
+  var EV = RAW.map(function (r) {
+    var d = r.t.slice(0, 10).split("-").map(Number);
+    var t = r.t.slice(11).split(":").map(Number);
+    var jsDow = new Date(Date.UTC(d[0], d[1] - 1, d[2])).getUTCDay(); // 0=Sun
+    return {
+      date: r.t.slice(0, 10),
+      hour: t[0],
+      min: t[1],
+      dow: (jsDow + 6) % 7,          // 0=Mon
+      kind: r.k,
+      reactions: r.r,
+      comments: r.c,
+      reposts: r.p,
+      media: r.m,
+      text: r.x || "",
+      label: r.t.slice(0, 10) + " " + r.t.slice(11)
+    };
+  });
+
+  var NS = "http://www.w3.org/2000/svg";
+  function el(n, a) {
+    var e = document.createElementNS(NS, n);
+    for (var k in a) if (a[k] !== null && a[k] !== undefined) e.setAttribute(k, a[k]);
+    return e;
+  }
+  function svg(w, h) {
+    var s = el("svg", { viewBox: "0 0 " + w + " " + h, width: w, height: h,
+                        preserveAspectRatio: "xMidYMid meet", role: "img" });
+    return s;
+  }
+  function txt(s, x, y, o) {
+    o = o || {};
+    var t = el("text", {
+      x: x, y: y, fill: o.fill || "var(--ink-3)",
+      "font-size": o.size || 10.5,
+      "font-family": o.mono === false ? "var(--f-body)" : "var(--f-mono)",
+      "font-weight": o.weight || 400,
+      "text-anchor": o.anchor || "start",
+      "letter-spacing": o.ls || ".02em"
+    });
+    t.textContent = s;
+    s !== "" && o.tabular !== false && t.setAttribute("style", "font-variant-numeric:tabular-nums");
+    return t;
+  }
+  // vertical bar with rounded top corners only
+  function barUp(x, y, w, h, r) {
+    if (h <= 0) return "";
+    r = Math.min(r, w / 2, h);
+    return "M" + x + "," + (y + h) +
+           "V" + (y + r) +
+           "a" + r + "," + r + " 0 0 1 " + r + ",-" + r +
+           "H" + (x + w - r) +
+           "a" + r + "," + r + " 0 0 1 " + r + "," + r +
+           "V" + (y + h) + "Z";
+  }
+
+  // ---------- tooltip ----------
+  var tip = document.getElementById("tip");
+  function showTip(e, html) {
+    tip.innerHTML = html;
+    tip.style.opacity = "1";
+    moveTip(e);
+  }
+  function moveTip(e) {
+    var pad = 14, r = tip.getBoundingClientRect();
+    var x = e.clientX + pad, y = e.clientY + pad;
+    if (x + r.width > window.innerWidth - 8) x = e.clientX - r.width - pad;
+    if (y + r.height > window.innerHeight - 8) y = e.clientY - r.height - pad;
+    tip.style.left = x + "px";
+    tip.style.top = y + "px";
+  }
+  function hideTip() { tip.style.opacity = "0"; }
+  function bind(node, html) {
+    node.addEventListener("mouseenter", function (e) { showTip(e, html); });
+    node.addEventListener("mousemove", moveTip);
+    node.addEventListener("mouseleave", hideTip);
+  }
+  function hm(h, m) {
+    return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+  }
+
+  // ---------- findings ----------
+  var total = EV.length;
+  var posts = EV.filter(function (e) { return e.kind === "post"; }).length;
+  var reposts = total - posts;
+  var byHour = new Array(24).fill(0);
+  var byDow = new Array(7).fill(0);
+  EV.forEach(function (e) { byHour[e.hour]++; byDow[e.dow]++; });
+  var peakHour = byHour.indexOf(Math.max.apply(null, byHour));
+  var peakDow = byDow.indexOf(Math.max.apply(null, byDow));
+  var activeDates = {};
+  EV.forEach(function (e) { activeDates[e.date] = 1; });
+  var activeDays = Object.keys(activeDates).length;
+  var silentDays = 31 - activeDays;
+  var weekend = EV.filter(function (e) { return e.dow >= 5; }).length;
+
+  document.getElementById("f-events").textContent = total + " (" + posts + " post / " + reposts + " repost)";
+
+  var cards = [
+    { lead: true, num: byHour[peakHour], unit: "of " + total,
+      lbl: "Events at " + hm(peakHour, 0),
+      note: "Nearly a quarter of everything you publish goes out in the 6 AM hour. It is the single strongest signal in the whole dataset." },
+    { num: DOW[peakDow], lbl: "Heaviest day",
+      note: byDow[peakDow] + " events on Tuesdays — twice the Monday count and four times Sunday." },
+    { num: weekend, unit: "of " + total,
+      lbl: "Weekend events",
+      note: "Three Sunday items and not a single Saturday post in 31 days. The weekend is effectively off." },
+    { num: silentDays, unit: "of 31",
+      lbl: "Silent days",
+      note: "Output is bursty: a six-day gap ran through the end of August, then six posts landed on 18 August alone." }
+  ];
+
+  document.getElementById("findings").innerHTML = cards.map(function (c) {
+    return '<div class="finding' + (c.lead ? " lead" : "") + '">' +
+      '<div class="lbl">' + c.lbl + "</div>" +
+      '<div class="num">' + c.num + (c.unit ? " <small>" + c.unit + "</small>" : "") + "</div>" +
+      '<div class="note">' + c.note + "</div></div>";
+  }).join("");
+
+  // ---------- 1. weekday x hour grid ----------
+  (function () {
+    var cell = 33, gap = 3, padL = 46, padT = 26, padB = 8, padR = 8;
+    var W = padL + 24 * cell + padR, H = padT + 7 * cell + padB;
+    var s = svg(W, H);
+    s.setAttribute("aria-label", "Heat grid of posting activity by weekday and hour");
+
+    var counts = [];
+    for (var d = 0; d < 7; d++) { counts.push(new Array(24).fill(0)); }
+    var items = {};
+    EV.forEach(function (e) {
+      counts[e.dow][e.hour]++;
+      var k = e.dow + ":" + e.hour;
+      (items[k] = items[k] || []).push(e);
+    });
+    var max = 0;
+    counts.forEach(function (row) { row.forEach(function (v) { if (v > max) max = v; }); });
+
+    var steps = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6"];
+    function shade(v) {
+      if (!v) return "var(--grid-empty)";
+      var i = Math.ceil(v / max * steps.length) - 1;
+      return "var(" + steps[Math.max(0, Math.min(steps.length - 1, i))] + ")";
+    }
+
+    // hour labels every 3h
+    for (var h = 0; h < 24; h += 3) {
+      s.appendChild(txt(hm(h, 0), padL + h * cell + (cell - gap) / 2, padT - 10,
+                        { anchor: "middle", size: 10 }));
+    }
+
+    for (var dd = 0; dd < 7; dd++) {
+      s.appendChild(txt(DOW[dd], padL - 10, padT + dd * cell + (cell - gap) / 2 + 4,
+                        { anchor: "end", size: 11,
+                          fill: byDow[dd] === 0 ? "var(--ink-3)" : "var(--ink-2)" }));
+      for (var hh = 0; hh < 24; hh++) {
+        var v = counts[dd][hh];
+        var rect = el("rect", {
+          x: padL + hh * cell, y: padT + dd * cell,
+          width: cell - gap, height: cell - gap, rx: 2,
+          fill: shade(v)
+        });
+        if (v) {
+          rect.setAttribute("cursor", "pointer");
+          var list = items[dd + ":" + hh];
+          var lines = list.map(function (e) {
+            return "· " + hm(e.hour, e.min) + "  " + (e.kind === "post" ? "post" : "repost") +
+                   "  " + e.reactions + "&#8202;reactions";
+          }).join("<br>");
+          bind(rect, "<b>" + DOWFULL[dd] + " · " + hm(hh, 0) + "</b><br>" +
+                     '<span class="t-sub">' + v + (v === 1 ? " event" : " events") + "</span><br>" + lines);
+          var lab = txt(String(v), padL + hh * cell + (cell - gap) / 2,
+                        padT + dd * cell + (cell - gap) / 2 + 4,
+                        { anchor: "middle", size: 11, weight: 600,
+                          fill: v / max > 0.5 ? "var(--surface)" : "var(--ink)" });
+          lab.setAttribute("pointer-events", "none");
+          s.appendChild(rect);
+          s.appendChild(lab);
+        } else {
+          s.appendChild(rect);
+        }
+      }
+    }
+    document.getElementById("c-grid").appendChild(s);
+
+    var sw = document.getElementById("ramp-swatches");
+    sw.innerHTML = '<i style="background:var(--grid-empty)"></i>' +
+      steps.map(function (v) { return '<i style="background:var(' + v + ')"></i>'; }).join("");
+    document.getElementById("ramp-max").textContent = "0 → " + max;
+  })();
+
+  // ---------- 2. hour of day ----------
+  (function () {
+    var W = 520, H = 220, padL = 30, padR = 10, padT = 18, padB = 34;
+    var s = svg(W, H);
+    s.setAttribute("aria-label", "Bar chart of events by hour of day");
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var max = Math.max.apply(null, byHour);
+    var bw = plotW / 24;
+
+    [0, 5, 10].forEach(function (g) {
+      if (g > max) return;
+      var y = padT + plotH - g / max * plotH;
+      s.appendChild(el("line", { x1: padL, x2: W - padR, y1: y, y2: y,
+                                 stroke: "var(--line-soft)", "stroke-width": 1 }));
+      s.appendChild(txt(String(g), padL - 7, y + 3.5, { anchor: "end", size: 10 }));
+    });
+
+    for (var h = 0; h < 24; h++) {
+      var v = byHour[h];
+      var bh = v / max * plotH;
+      var x = padL + h * bw;
+      if (v) {
+        var p = el("path", {
+          d: barUp(x + 2, padT + plotH - bh, bw - 4, bh, 3),
+          fill: h === 6 ? "var(--accent)" : "var(--s3)"
+        });
+        p.setAttribute("cursor", "pointer");
+        bind(p, "<b>" + hm(h, 0) + " – " + hm((h + 1) % 24, 0) + "</b><br>" +
+                '<span class="t-sub">' + v + (v === 1 ? " event" : " events") + "</span>");
+        s.appendChild(p);
+      }
+      if (h % 3 === 0) {
+        s.appendChild(txt(String(h).padStart(2, "0"), x + bw / 2, H - padB + 15,
+                          { anchor: "middle", size: 10 }));
+      }
+    }
+    // direct label on the peak only
+    var px = padL + 6 * bw + bw / 2;
+    s.appendChild(txt(byHour[6] + " events", px, padT + plotH - byHour[6] / max * plotH - 7,
+                      { anchor: "middle", size: 10.5, weight: 600, fill: "var(--accent)" }));
+    s.appendChild(txt("hour of day, local", padL, H - 4, { size: 10 }));
+    document.getElementById("c-hour").appendChild(s);
+  })();
+
+  // ---------- 3. day of week, stacked ----------
+  (function () {
+    var W = 520, H = 220, padL = 30, padR = 10, padT = 18, padB = 34;
+    var s = svg(W, H);
+    s.setAttribute("aria-label", "Stacked bar chart of posts and reposts by day of week");
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var pc = new Array(7).fill(0), rc = new Array(7).fill(0);
+    EV.forEach(function (e) { (e.kind === "post" ? pc : rc)[e.dow]++; });
+    var max = Math.max.apply(null, byDow);
+    var bw = plotW / 7;
+
+    [0, 4, 8, 12].forEach(function (g) {
+      if (g > max) return;
+      var y = padT + plotH - g / max * plotH;
+      s.appendChild(el("line", { x1: padL, x2: W - padR, y1: y, y2: y,
+                                 stroke: "var(--line-soft)", "stroke-width": 1 }));
+      s.appendChild(txt(String(g), padL - 7, y + 3.5, { anchor: "end", size: 10 }));
+    });
+
+    for (var d = 0; d < 7; d++) {
+      var x = padL + d * bw + bw * 0.18;
+      var w = bw * 0.64;
+      var ph = pc[d] / max * plotH;
+      var rh = rc[d] / max * plotH;
+      var base = padT + plotH;
+
+      if (rc[d]) {
+        var rp = el("path", { d: barUp(x, base - ph - rh, w, rh, 3), fill: "var(--accent-2)" });
+        rp.setAttribute("cursor", "pointer");
+        bind(rp, "<b>" + DOWFULL[d] + "</b><br>" + '<span class="t-sub">' + rc[d] + " reposts</span>");
+        s.appendChild(rp);
+      }
+      if (pc[d]) {
+        // 2px surface gap between stacked segments
+        var pp = el("path", { d: barUp(x, base - ph, w, ph - (rc[d] ? 2 : 0), rc[d] ? 0 : 3),
+                              fill: "var(--accent)" });
+        pp.setAttribute("cursor", "pointer");
+        bind(pp, "<b>" + DOWFULL[d] + "</b><br>" + '<span class="t-sub">' + pc[d] + " original posts</span>");
+        s.appendChild(pp);
+      }
+      s.appendChild(txt(DOW[d], x + w / 2, H - padB + 15,
+                        { anchor: "middle", size: 10.5,
+                          fill: byDow[d] === 0 ? "var(--ink-3)" : "var(--ink-2)" }));
+      s.appendChild(txt(byDow[d] ? String(byDow[d]) : "0",
+                        x + w / 2, base - ph - rh - 7,
+                        { anchor: "middle", size: 10.5, weight: 600,
+                          fill: byDow[d] ? "var(--ink)" : "var(--ink-3)" }));
+    }
+    document.getElementById("c-dow").appendChild(s);
+  })();
+
+  // ---------- 4. daily timeline ----------
+  (function () {
+    var dates = [];
+    var start = "2026-08-12", cur = new Date(Date.UTC(2026, 7, 12));
+    for (var i = 0; i < 31; i++) {
+      dates.push(cur.toISOString().slice(0, 10));
+      cur.setUTCDate(cur.getUTCDate() + 1);
+    }
+    var pc = {}, rc = {};
+    EV.forEach(function (e) {
+      var m = e.kind === "post" ? pc : rc;
+      m[e.date] = (m[e.date] || 0) + 1;
+    });
+
+    var W = 1040, H = 210, padL = 30, padR = 10, padT = 18, padB = 42;
+    var s = svg(W, H);
+    s.setAttribute("aria-label", "Daily activity across the 31 day collection window");
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var max = 0;
+    dates.forEach(function (d) { max = Math.max(max, (pc[d] || 0) + (rc[d] || 0)); });
+    var bw = plotW / dates.length;
+
+    [0, 2, 4, 6].forEach(function (g) {
+      if (g > max) return;
+      var y = padT + plotH - g / max * plotH;
+      s.appendChild(el("line", { x1: padL, x2: W - padR, y1: y, y2: y,
+                                 stroke: "var(--line-soft)", "stroke-width": 1 }));
+      s.appendChild(txt(String(g), padL - 7, y + 3.5, { anchor: "end", size: 10 }));
+    });
+
+    dates.forEach(function (d, i) {
+      var p = pc[d] || 0, r = rc[d] || 0, tot = p + r;
+      var x = padL + i * bw + bw * 0.16;
+      var w = bw * 0.68;
+      var base = padT + plotH;
+      var ph = p / max * plotH, rh = r / max * plotH;
+      var jsDow = new Date(d + "T00:00:00Z").getUTCDay();
+      var dow = (jsDow + 6) % 7;
+
+      if (!tot) {
+        // silent day: a flat tick on the baseline
+        s.appendChild(el("rect", { x: x, y: base - 2, width: w, height: 2,
+                                   fill: "var(--line)", rx: 1 }));
+      } else {
+        if (r) {
+          var rp = el("path", { d: barUp(x, base - ph - rh, w, rh, 3), fill: "var(--accent-2)" });
+          rp.setAttribute("cursor", "pointer");
+          bind(rp, "<b>" + d + " · " + DOW[dow] + "</b><br>" +
+                   '<span class="t-sub">' + p + " posts, " + r + " reposts</span>");
+          s.appendChild(rp);
+        }
+        if (p) {
+          var pp = el("path", { d: barUp(x, base - ph, w, ph - (r ? 2 : 0), r ? 0 : 3),
+                                fill: "var(--accent)" });
+          pp.setAttribute("cursor", "pointer");
+          bind(pp, "<b>" + d + " · " + DOW[dow] + "</b><br>" +
+                   '<span class="t-sub">' + p + " posts, " + r + " reposts</span>");
+          s.appendChild(pp);
+        }
+      }
+      if (i % 3 === 0) {
+        s.appendChild(txt(d.slice(8) + " " + ["Aug", "Sep"][Number(d.slice(5, 7)) - 8],
+                          x + w / 2, H - padB + 15, { anchor: "middle", size: 9.5 }));
+      }
+      if (dow === 5 || dow === 6) {
+        s.appendChild(txt("·", x + w / 2, H - padB + 27,
+                          { anchor: "middle", size: 12, fill: "var(--ink-3)" }));
+      }
+    });
+    s.appendChild(txt("weekends marked ·   flat tick = no activity that day",
+                      padL, H - 5, { size: 10 }));
+    document.getElementById("c-days").appendChild(s);
+  })();
+
+  // ---------- 5. avg reactions by hour ----------
+  (function () {
+    var sum = new Array(24).fill(0), n = new Array(24).fill(0);
+    EV.forEach(function (e) { sum[e.hour] += e.reactions; n[e.hour]++; });
+    var avg = sum.map(function (v, i) { return n[i] ? v / n[i] : 0; });
+
+    var W = 1040, H = 230, padL = 34, padR = 10, padT = 22, padB = 44;
+    var s = svg(W, H);
+    s.setAttribute("aria-label", "Average reactions per event by hour of day");
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var max = Math.max.apply(null, avg);
+    var bw = plotW / 24;
+
+    [0, 25, 50, 75].forEach(function (g) {
+      if (g > max) return;
+      var y = padT + plotH - g / max * plotH;
+      s.appendChild(el("line", { x1: padL, x2: W - padR, y1: y, y2: y,
+                                 stroke: "var(--line-soft)", "stroke-width": 1 }));
+      s.appendChild(txt(String(g), padL - 7, y + 3.5, { anchor: "end", size: 10 }));
+    });
+
+    for (var h = 0; h < 24; h++) {
+      var x = padL + h * bw;
+      if (n[h]) {
+        var bh = avg[h] / max * plotH;
+        var solid = n[h] >= 3;
+        var p = el("path", {
+          d: barUp(x + 3, padT + plotH - bh, bw - 6, bh, 3),
+          fill: solid ? "var(--accent)" : "var(--accent-weak)",
+          stroke: solid ? "none" : "var(--accent)",
+          "stroke-width": solid ? 0 : 1
+        });
+        p.setAttribute("cursor", "pointer");
+        bind(p, "<b>" + hm(h, 0) + " hour</b><br>" +
+                '<span class="t-sub">' + avg[h].toFixed(1) + " avg reactions · n=" + n[h] + "</span>");
+        s.appendChild(p);
+        s.appendChild(txt("n=" + n[h], x + bw / 2, padT + plotH - bh - 7,
+                          { anchor: "middle", size: 9.5,
+                            fill: solid ? "var(--ink-2)" : "var(--ink-3)" }));
+      }
+      if (h % 2 === 0) {
+        s.appendChild(txt(String(h).padStart(2, "0"), x + bw / 2, H - padB + 15,
+                          { anchor: "middle", size: 10 }));
+      }
+    }
+    s.appendChild(txt("average reactions per event · hour of day, local", padL, H - 6, { size: 10 }));
+    document.getElementById("c-eng").appendChild(s);
+  })();
+
+  // ---------- table ----------
+  (function () {
+    var rows = EV.slice().sort(function (a, b) { return a.label < b.label ? 1 : -1; });
+    document.getElementById("tbody").innerHTML = rows.map(function (e) {
+      return "<tr>" +
+        '<td class="mono">' + e.label + "</td>" +
+        '<td class="mono">' + DOW[e.dow] + "</td>" +
+        '<td><span class="pill ' + e.kind + '">' + e.kind + "</span></td>" +
+        '<td class="mono">' + e.reactions + "</td>" +
+        '<td class="mono">' + e.comments + "</td>" +
+        '<td class="mono">' + e.reposts + "</td>" +
+        '<td class="txt">' + (e.text ? e.text.replace(/</g, "&lt;") : "—") + "</td>" +
+        "</tr>";
+    }).join("");
+  })();
+})();
+</script>

@@ -89,6 +89,23 @@ result: **run it several times and take the union.**
 
 The practical consequence: treat event counts as a floor, not a complete census.
 
+## Hosting
+
+The dashboard is a single self-contained file, so any static host works.
+`vercel.json` builds only the dashboard into `public/index.html` — the
+collection scripts and the raw data stay out of the deployed surface:
+
+```bash
+vercel deploy          # preview URL
+vercel deploy --prod   # production
+```
+
+Responses are sent with `X-Robots-Tag: noindex`, so a deployment will not turn
+up in search results. That is not access control: **a Vercel URL is public to
+anyone who has it.** This page maps when a named person is reliably online and
+when they are not, so gate it with Deployment Protection rather than relying on
+an unguessable URL.
+
 ## Scope and caveats
 
 - **Broadcast activity only.** The activity feed surfaces posts and reposts.

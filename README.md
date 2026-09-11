@@ -56,6 +56,20 @@ python3 analyze.py --list                       # what has been collected
 python3 analyze.py --subject <slug> --tz Europe/London
 ```
 
+`--subject` takes a slug or any member profile URL — paste the link straight
+from the address bar and the extra path and tracking parameters are discarded:
+
+```bash
+python3 analyze.py --subject dkeefe
+python3 analyze.py --subject linkedin.com/in/dkeefe
+python3 analyze.py --subject "https://www.linkedin.com/in/dkeefe/recent-activity/all/"
+python3 analyze.py --subject "https://uk.linkedin.com/in/dkeefe?originalSubdomain=uk"
+```
+
+Anything path-shaped must actually contain `/in/<slug>`. A company page, a feed
+URL, or a stray path is rejected by name rather than quietly analyzed as a
+subject called `feed`.
+
 Each subject gets its own directory:
 
 ```

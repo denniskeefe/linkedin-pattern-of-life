@@ -177,6 +177,20 @@ h1 {
   font-weight: 500;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.filebar dd a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.filebar dd a:hover { border-bottom-color: var(--accent); }
+
+.filebar dd a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* ---------- findings ---------- */
@@ -671,7 +685,18 @@ td.txt { color: var(--ink-2); min-width: 230px; }
     "LinkedIn's own activity identifiers, so they are precise to the second — not the " +
     "“3w ago” the feed shows you.";
 
-  document.getElementById("f-subject").textContent = META.subject || "—";
+  var subjectCell = document.getElementById("f-subject");
+  if (META.url) {
+    var a = document.createElement("a");
+    a.href = META.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = META.subject || META.url;
+    subjectCell.textContent = "";
+    subjectCell.appendChild(a);
+  } else {
+    subjectCell.textContent = META.subject || "—";
+  }
   document.getElementById("f-window").textContent =
     pretty(EV[0].date) + " – " + pretty(EV[total - 1].date);
   document.getElementById("f-events").textContent =

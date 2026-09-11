@@ -23,11 +23,13 @@ raw.psv is what lkExport() copies to the clipboard: one event per line,
 
 import argparse
 import json
+import re
 import shutil
 import sys
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import unquote
 from zoneinfo import ZoneInfo
 
 HERE = Path(__file__).parent
@@ -35,6 +37,65 @@ SUBJECTS = HERE / "subjects"
 TEMPLATE = HERE / "template.html"
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 PLACEHOLDER = "__DATA__"
+
+# A profile slug: letters, digits, hyphens, and the percent-escapes LinkedIn
+# uses for non-Latin names. Deliberately not a path, so a pasted URL cannot
+# walk out of subjects/.
+SLUG = re.compile(r"^[A-Za-z0-9\-_%À-￿]{1,120}$")
+
+PROFILE_PATH = re.compile(r"/in/([^/?#]+)", re.I)
+COMPANY_PATH = re.compile(r"/(company|school|showcase)/([^/?#]+)", re.I)
+
+
+def parse_subject(value):
+    """Accept a bare slug or any LinkedIn profile URL and return the slug.
+
+    All of these name the same subject:
+        dkeefe
+        linkedin.com/in/dkeefe
+        https://www.linkedin.com/in/dkeefe/
+        https://www.linkedin.com/in/dkeefe/recent-activity/all/
+        https://uk.linkedin.com/in/dkeefe?originalSubdomain=uk
+    """
+    raw = value.strip()
+    if not raw:
+        sys.exit("--subject is empty")
+
+    if "/" in raw:
+        # Anything path-shaped must actually name a member profile. Falling back
+        # to "last path segment" here would happily turn /feed/ into a subject
+        # called "feed", and ../../etc/passwd into one called "passwd".
+        company = COMPANY_PATH.search(raw)
+        if company and not PROFILE_PATH.search(raw):
+            sys.exit(f"that is a {company.group(1)} page, not a member profile.\n"
+                     "This tool reads /in/<slug> activity feeds only.")
+
+        match = PROFILE_PATH.search(raw)
+        if not match:
+            sys.exit(f"no /in/<slug> in {value!r}.\n"
+                     "Pass a member profile URL such as "
+                     "https://www.linkedin.com/in/<slug>/, or just the slug.")
+        slug = match.group(1)
+    else:
+        slug = raw
+
+    # PROFILE_PATH already stops at ? and #, so only escapes remain to resolve.
+    slug = unquote(slug).strip()
+
+    if not slug or not SLUG.match(slug):
+        sys.exit(f"could not read a profile slug from {value!r}.\n"
+                 "Pass the slug, or a profile URL such as "
+                 "https://www.linkedin.com/in/<slug>/")
+
+    return slug
+
+
+def profile_url(slug):
+    return f"https://www.linkedin.com/in/{slug}/"
+
+
+def activity_url(slug):
+    return f"https://www.linkedin.com/in/{slug}/recent-activity/all/"
 
 
 def subject_dir(slug):
@@ -57,6 +118,7 @@ def load_meta(slug, args):
     meta.setdefault("tz", "America/Chicago")
     meta.setdefault("self", False)
     meta["subject"] = f"/in/{slug}"
+    meta["url"] = profile_url(slug)
 
     path.write_text(json.dumps(meta, indent=1))
     return meta
@@ -143,6 +205,7 @@ def render(events, meta, out):
     payload = {
         "meta": {
             "subject": meta["subject"],
+            "url": meta["url"],
             "label": meta["label"],
             "tz": meta["tz"],
             "collected": datetime.now().strftime("%Y-%m-%d"),
@@ -177,12 +240,15 @@ def list_subjects():
         n = len([l for l in raw.read_text().splitlines() if l.strip()]) if raw.exists() else 0
         tag = "self" if meta.get("self") else "third-party"
         print(f"  {d.name:24} {n:>4} events   {tag:12} {meta.get('tz', '')}")
+        print(f"  {'':24} {meta.get('url', profile_url(d.name))}")
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--subject", help="profile slug, the part after /in/")
+    ap.add_argument("--subject",
+                    help="profile slug or any LinkedIn profile URL "
+                         "(https://www.linkedin.com/in/<slug>/...)")
     ap.add_argument("--label", help="display name for the report")
     ap.add_argument("--tz", help="timezone to report in (default: America/Chicago)")
     ap.add_argument("--self", dest="self_subject", action="store_true",
@@ -199,15 +265,18 @@ def main():
     if not args.subject:
         ap.error("--subject is required (or use --list)")
 
-    slug = args.subject.strip().strip("/").split("/")[-1]
+    slug = parse_subject(args.subject)
     d = subject_dir(slug)
     raw = d / "raw.psv"
 
     if not raw.exists():
         d.mkdir(parents=True, exist_ok=True)
-        sys.exit(f"no data yet: collect into {raw.relative_to(HERE)} first\n"
-                 f"  open https://www.linkedin.com/in/{slug}/recent-activity/all/\n"
-                 f"  paste scrape.js, run await lkCollect({{ days: 30 }}), then copy(lkExport())")
+        sys.exit(f"no data yet for {slug}. Collect it first:\n"
+                 f"  1. open {activity_url(slug)}\n"
+                 f"  2. paste scrape.js into the console\n"
+                 f"  3. await lkCollect({{ days: 30 }})   (run it two or three times)\n"
+                 f"  4. copy(lkExport())\n"
+                 f"  5. paste into {raw.relative_to(HERE)}")
 
     meta = load_meta(slug, args)
     events = read_events(raw, meta["tz"])

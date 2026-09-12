@@ -12,4 +12,10 @@ node_modules/
 .browser/
 
 # Generated poster exports.
-pattern-of-life*.png
+*pattern-of-life*.png
+
+# Collected profile data. Third-party activity histories stay off the repo
+# deliberately; see "Subjects other than your own" in the README.
+subjects/
+raw.psv
+activity.json

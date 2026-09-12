@@ -4,7 +4,9 @@
   "private": true,
   "description": "Collect your own LinkedIn activity history and render it as a pattern-of-life report.",
   "scripts": {
-    "collect": "node collect.js"
+    "collect": "node collect.js",
+    "console": "python3 analyze.py --console",
+    "publish-console": "python3 analyze.py --publish-console"
   },
   "dependencies": {
     "playwright": "^1.49.0"

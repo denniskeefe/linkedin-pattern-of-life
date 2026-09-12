@@ -29,94 +29,97 @@ timezone. No estimation, no rounding to the nearest week.
 
 ## Usage
 
-**1. Collect.**
+**1. Pick a subject.** Open the research console and paste a profile URL or a
+slug; it prints the commands with the subject filled in.
 
 ```bash
-npm install        # once; uses the Chrome you already have
-npm run collect    # three passes over the last 30 days, then analyze
+npm install                  # once; uses the Chrome you already have
+npm run console              # -> subjects/index.html
+```
+
+The console resolves pasted URLs through the same rules as `--subject`, so it
+cannot hand you a command the CLI turns around and refuses. It also lists what
+has been collected on this machine. A second build, `research.html`, is the one
+that gets deployed: same launcher, no subject list.
+
+**2. Collect.**
+
+```bash
+node collect.js                          # the signed-in account
+node collect.js --subject dkeefe         # a named profile
+node collect.js --subject "https://www.linkedin.com/in/dkeefe/" --days 90
 ```
 
 The first run opens a Chrome window and waits up to fifteen minutes while you
 sign in to LinkedIn yourself — the script never handles credentials, and
 `--login-timeout <minutes>` adjusts the wait. The session is then kept in
 `.browser/`, which is gitignored, and later runs are headless. Sign-in is
-detected by the presence of LinkedIn's own `li_at` cookie, so an expired
-session is noticed rather than collected through: the collector reopens a
-window and asks for a fresh one.
+detected by LinkedIn's own `li_at` cookie, so an expired session is noticed
+rather than collected through.
 
-From there it is one step: `collect.js` opens your activity page, scrolls it in
+From there it is one step: `collect.js` opens the activity page, scrolls it in
 small increments, reads each card as it renders, merges what it finds into
-`raw.psv`, and hands off to `analyze.py`. Nothing goes through the clipboard.
+`subjects/<slug>/raw.psv`, and hands off to `analyze.py`, which writes the
+report and its poster. Nothing goes through the clipboard.
 
 ```bash
-node collect.js --days 90        # a wider window
-node collect.js --passes 5       # more passes over the same window
-node collect.js --headed         # watch it scroll
-node collect.js --no-analyze     # stop after writing raw.psv
-node collect.js --replace        # overwrite raw.psv instead of merging
-node collect.js --tz Europe/London
-node collect.js --login-timeout 30
+node collect.js --subject X --passes 5   # more passes over the same window
+node collect.js --subject X --headed     # watch it scroll
+node collect.js --subject X --no-analyze # stop after writing raw.psv
+node collect.js --subject X --replace    # overwrite rather than merging
 ```
 
-Whose activity it reads is not a flag. The collector opens `/in/me/`, which
-LinkedIn resolves to whichever account holds the session, so it can only ever
-reach your own history.
+Runs merge keyed on publication time, keeping the fullest reading of each field,
+so collecting again accumulates rather than replaces — the same union the
+multi-pass design depends on. The summary line reports how many were new.
 
-Runs merge into `raw.psv` keyed on publication time, keeping the fullest
-reading of each field, so collecting again accumulates rather than replaces —
-the same union the multi-pass design depends on. The summary line reports how
-many of the events were new.
-
-**2. Open `dashboard.html`** for the interactive read, or `graphic.html` for the
-poster — one page that leads with the finding rather than the charts. Both are
-single files with the dataset inlined; `analyze.py --inject` refreshes both.
-
-**3. Export the poster** (optional):
+**3. Read it.**
 
 ```bash
-./make_graphic.sh                    # -> pattern-of-life.png, light, 2x
-THEME=dark ./make_graphic.sh         # dark palette
-WIDTH=1600 ./make_graphic.sh ~/Desktop/pol.png
+open subjects/<slug>/index.html      # the report
+open subjects/<slug>/graphic.html    # the poster
 ```
 
-Captures the full page at twice the pixel density, so it holds up when shared or
-printed. It reuses the Playwright installed for collection; without it, it falls
-back to headless Chrome.
-
-**4. Export a PDF of the dashboard** (optional):
+**4. Export** (optional):
 
 ```bash
-./make_pdf.sh                      # -> linkedin-pattern-of-life.pdf
-./make_pdf.sh ~/Desktop/out.pdf    # or somewhere else
+./make_graphic.sh <slug>                  # -> <slug>-pattern-of-life.png, 2x
+THEME=dark ./make_graphic.sh <slug>       # dark palette
+./make_pdf.sh out.pdf subjects/<slug>/index.html
 ```
 
-Renders through headless Chrome onto landscape Letter. The print stylesheet
-forces the light palette regardless of the screen theme, expands the event log
-into an appendix, and keeps charts from straddling page breaks. `Cmd+P` from the
-browser produces the same result.
+### Subjects other than your own
+
+Everything under `subjects/` is gitignored. Which profiles someone has collected
+is the most sensitive thing this repo holds, so third-party histories stay on the
+machine that collected them, and the deployed console ships none of them.
+
+`collect.js` asks LinkedIn who you are before it collects: a subject that
+resolves to the signed-in account is marked `--self`, and anything else is a
+third party. `analyze.py --publish` refuses any subject not marked `--self`, so
+another person's pattern of life cannot reach the published page by routine.
+
+This is a tool for reading activity you are authorized to read. A pattern-of-life
+report maps when a named person is reliably online and when they are not; treat
+the output accordingly.
 
 ### Collecting by hand
 
-`scrape.js` is still a paste-in console script, which is useful when Playwright
-is not available or the automated pass is blocked. Open your own activity page:
-
-```
-https://www.linkedin.com/in/<you>/recent-activity/all/
-```
-
-and paste the file into the DevTools console:
+`scrape.js` is still a paste-in console script, useful when Node is unavailable
+or the automated pass is blocked. The console prints these steps too. Open the
+subject's activity page, paste the file into DevTools, then:
 
 ```js
 await lkCollect({ days: 30 })   // run this two or three times — see below
 copy(lkExport())                // clipboard now holds the raw.psv contents
 ```
 
-Paste into `raw.psv`, then:
+Paste into `subjects/<slug>/raw.psv`, then:
 
 ```bash
-python3 analyze.py --inject      # summary, activity.json, dashboard refresh
-python3 analyze.py --tz Europe/London
-python3 analyze.py other.psv
+python3 analyze.py --subject <slug>          # summary, report, poster
+python3 analyze.py --list                    # what has been collected
+python3 analyze.py --tz Europe/London --subject <slug>
 ```
 
 Both paths run the same harvest: `collect.js` loads `scrape.js` and calls the
@@ -124,9 +127,7 @@ functions it defines, rather than keeping a second copy of the card parsing.
 
 Requires Python 3.9+ (for `zoneinfo`) and no third-party Python packages. The
 automated path additionally needs Node and Playwright, which `npm install`
-covers; it drives your installed Chrome, so no browser download is involved. If
-you have no Chrome, run `npx playwright install chromium` and it will use that
-instead.
+covers; it drives your installed Chrome, so no browser download is involved.
 
 ## Two things the feed does that shape the code
 
@@ -146,20 +147,27 @@ The practical consequence: treat event counts as a floor, not a complete census.
 
 ## Hosting
 
-The dashboard is a single self-contained file, so any static host works.
-`vercel.json` builds only the dashboard into `public/index.html` — the
-collection scripts and the raw data stay out of the deployed surface:
+What gets deployed is the **console**, not a report. `vercel.json` builds
+`research.html` into `public/index.html`:
 
 ```bash
-vercel deploy          # preview URL
-vercel deploy --prod   # production
+npm run publish-console   # rebuild research.html from console.html
+vercel deploy             # preview URL
+vercel deploy --prod      # production
 ```
 
-Responses are sent with `X-Robots-Tag: noindex`, so a deployment will not turn
-up in search results. That is not access control: **a Vercel URL is public to
-anyone who has it.** This page maps when a named person is reliably online and
-when they are not, so gate it with Deployment Protection rather than relying on
-an unguessable URL.
+The hosted page is a launcher and nothing else. It resolves a profile URL to a
+slug and prints the commands you run on your own machine; it holds no collected
+data, names no subjects, and sends nothing anywhere — every keystroke stays in
+the browser. The deployed build ships an empty subject list by construction, so
+which profiles have been collected is not disclosed by the site.
+
+**No report is hosted, including the maintainer's own.** A pattern-of-life page
+maps when a named person is reliably online and when they are not, which is not
+something to leave at a public URL for the convenience of having it there. A
+Vercel URL is public to anyone who has it — `X-Robots-Tag: noindex` keeps it out
+of search results, which is not the same as access control. If you ever do host
+a rendered report, gate it with Deployment Protection.
 
 ## Scope and caveats
 
@@ -172,25 +180,29 @@ an unguessable URL.
   collection time. A post from four weeks ago has had four weeks to accumulate
   and today's has had hours, which biases any reach-over-time comparison toward
   older posts.
-- **Small samples.** Split 42 events across 24 hours and most hours hold one or
-  two. `analyze.py` marks those `(thin)` and the dashboard draws them as hollow
-  bars. They are anecdotes, not evidence.
-- **Your own account.** This reads a page you are already logged into and
-  authorized to view. It is not a tool for collecting on other people.
+- **Small samples.** Split sixty events across 24 hours and most hours hold one
+  or two. `analyze.py` marks those `(thin)`, the dashboard draws them as hollow
+  bars and the poster lightens them. They are anecdotes, not evidence.
+- **Authorized reading only.** This reads pages you are signed in to and
+  entitled to view, at human scroll speed. Collecting on a third party is a
+  deliberate act: their data stays local, `--publish` refuses it, and what you
+  do with it is your responsibility, not the tool's.
 
 ## Files
 
 | File | |
 |---|---|
-| `collect.js` | Automated collector — drives Chrome, writes `raw.psv`, runs the analysis |
+| `collect.js` | Automated collector — drives Chrome, writes `subjects/<slug>/raw.psv`, runs the analysis |
 | `scrape.js` | The harvest itself — loaded by `collect.js`, pasteable into the console |
-| `raw.psv` | Collected events, pipe-delimited, oldest first |
-| `analyze.py` | Summary, `activity.json`, dashboard injection |
-| `activity.json` | Full parsed dataset, one object per event |
-| `dashboard.html` | Self-contained interactive dashboard, data inlined |
-| `graphic.html` | Poster view — hero finding, heatmap, cadence, table views |
+| `console.html` | The research console — paste a profile, get the commands |
+| `research.html` | The deployed build of the console; lists no subjects |
+| `template.html` | Report template, one render per subject |
+| `subjects/<slug>/` | Collected events, report and poster — gitignored |
+| `analyze.py` | Summary, per-subject report and poster, console builds |
+| `dashboard.html` | The published self report (`--publish`), data inlined |
+| `graphic.html` | Poster template — hero finding, heatmap, cadence, table views |
 | `make_pdf.sh` | Renders the dashboard to PDF via headless Chrome |
-| `make_graphic.sh` | Renders the poster to PNG at 2x |
+| `make_graphic.sh` | Renders a subject's poster to PNG at 2x |
 | `.browser/` | Chrome profile holding the LinkedIn session; gitignored |
 
 ## The dashboard

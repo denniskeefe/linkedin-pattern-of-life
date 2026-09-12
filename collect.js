@@ -1,19 +1,20 @@
 #!/usr/bin/env node
 /* Automated LinkedIn activity collection.
  *
- *   node collect.js                 # 3 passes over the last 30 days, then analyze
- *   node collect.js --days 90
- *   node collect.js --passes 5 --no-analyze
+ *   node collect.js                        # your own account, 30 days
+ *   node collect.js --subject dkeefe       # a named profile
+ *   node collect.js --subject "https://www.linkedin.com/in/dkeefe/" --days 90
  *
- * Drives a real Chrome through the same harvest that scrape.js performs by
- * hand: it loads your own activity page, scrolls it in small steps, reads the
- * cards as they render, writes raw.psv and hands off to analyze.py. Nothing is
- * copied through the clipboard and nothing leaves this machine.
+ * Drives a real Chrome through the same harvest scrape.js performs by hand: it
+ * loads an activity page, scrolls it in small steps, reads the cards as they
+ * render, writes subjects/<slug>/raw.psv and hands off to analyze.py. Nothing
+ * is copied through the clipboard and nothing leaves this machine.
  *
- * The subject is not a parameter. The collector opens /in/me/, which LinkedIn
- * resolves to whichever account is signed in, so it can only ever read your
- * own history — the same property the console flow had, kept structural rather
- * than left to whoever is typing the URL.
+ * With no --subject it opens /in/me/, which LinkedIn resolves to whichever
+ * account is signed in, and marks that subject --self. A --subject that is not
+ * the signed-in account is a third party: its directory is gitignored along
+ * with every other subject, and analyze.py --publish refuses to put it on a
+ * public page.
  *
  * Sign-in is yours to do. The first run opens a visible window and waits for
  * you to log in; the session is then kept in .browser/ (gitignored) and later
@@ -36,7 +37,9 @@ function parseArgs(argv) {
   const opts = {
     days: 30,
     passes: 3,
-    out: path.join(HERE, "raw.psv"),
+    subject: null,
+    label: null,
+    out: null,
     headed: false,
     merge: true,
     analyze: true,
@@ -53,9 +56,11 @@ function parseArgs(argv) {
     };
     switch (arg) {
       case "--days":       opts.days = Number(next()); break;
+      case "--subject":    opts.subject = next(); break;
       case "--passes":     opts.passes = Number(next()); break;
       case "--out":        opts.out = path.resolve(next()); break;
       case "--tz":         opts.tz = next(); break;
+      case "--label":      opts.label = next(); break;
       case "--login-timeout": opts.loginWaitMs = Number(next()) * 60 * 1000; break;
       case "--headed":     opts.headed = true; break;
       case "--replace":    opts.merge = false; break;
@@ -76,10 +81,14 @@ function usage() {
   console.log(`
 Usage: node collect.js [options]
 
+  --subject SLUG|URL  whose activity to collect (default: the signed-in account)
   --days N            window to collect, in days (default: 30)
   --passes N          scroll passes to run (default: 3)
-  --out FILE          where to write the events (default: raw.psv)
+  --out FILE          write the events here instead of subjects/<slug>/raw.psv
+                      (analyze.py reads the standard path, so this implies
+                      --no-analyze)
   --tz ZONE           timezone to pass to analyze.py
+  --label NAME        display name for the report
   --login-timeout N   minutes to wait for sign-in (default: 15)
   --headed            show the browser window
   --replace           overwrite the existing file instead of merging into it
@@ -130,6 +139,44 @@ function formatPsv(events) {
     .join("\n") + "\n";
 }
 
+/* ---- subjects ------------------------------------------------------------ */
+
+/* Mirrors parse_subject() in analyze.py: the same inputs resolve to the same
+   slug, so this cannot hand analyze.py a subject it turns around and refuses.
+   Path-shaped input must actually name /in/<slug> — "last path segment" would
+   turn /feed/ into a subject called "feed", and a traversal into one called
+   "passwd". */
+const SLUG_RE = /^[A-Za-z0-9\-_%\u00C0-\uFFFF]{1,120}$/;
+
+function parseSubject(value) {
+  const raw = String(value || "").trim();
+  if (!raw) fail("--subject is empty");
+
+  let slug = raw;
+  if (raw.includes("/")) {
+    const company = raw.match(/\/(company|school|showcase)\/([^/?#]+)/i);
+    const profile = raw.match(/\/in\/([^/?#]+)/i);
+    if (company && !profile) {
+      fail(`that is a ${company[1]} page, not a member profile — `
+           + "this reads /in/<slug> activity feeds only");
+    }
+    if (!profile) {
+      fail(`no /in/<slug> in ${JSON.stringify(value)} — pass a member profile URL `
+           + "such as https://www.linkedin.com/in/<slug>/, or just the slug");
+    }
+    slug = profile[1];
+  }
+
+  slug = decodeURIComponent(slug).trim();
+  if (!slug || !SLUG_RE.test(slug)) {
+    fail(`could not read a profile slug from ${JSON.stringify(value)}`);
+  }
+  return slug;
+}
+
+const activityFor = slug =>
+  `https://www.linkedin.com/in/${encodeURIComponent(slug)}/recent-activity/all/`;
+
 /* ---- browser ------------------------------------------------------------ */
 
 async function launch({ headed }) {
@@ -154,17 +201,16 @@ function onAuthwall(page) {
   return /\/(login|authwall|checkpoint|signup|uas)\b/.test(page.url());
 }
 
-/* Resolve the signed-in account's activity feed. /in/me/ is LinkedIn's own
-   redirect to whoever holds the session, so the slug is never guessed. */
-async function activityUrl(page) {
+/* Resolve the signed-in account's own slug. /in/me/ is LinkedIn's own redirect
+   to whoever holds the session, so "is this me?" is answered by the session
+   rather than by what someone typed. */
+async function whoAmI(page) {
   await page.goto("https://www.linkedin.com/in/me/", { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(1500);
   if (onAuthwall(page)) return null;
 
   let match = page.url().match(/linkedin\.com\/in\/([^/?#]+)/);
-  if (match && match[1] !== "me") {
-    return `https://www.linkedin.com/in/${match[1]}/recent-activity/all/`;
-  }
+  if (match && match[1] !== "me") return decodeURIComponent(match[1]);
 
   // The redirect did not resolve; read the slug off the profile link instead.
   await page.goto("https://www.linkedin.com/feed/", { waitUntil: "domcontentloaded" });
@@ -172,7 +218,7 @@ async function activityUrl(page) {
   const href = await page.locator('a[href*="/in/"]').first().getAttribute("href").catch(() => null);
   match = href && href.match(/\/in\/([^/?#]+)/);
   if (!match) throw new Error("could not resolve the signed-in profile");
-  return `https://www.linkedin.com/in/${match[1]}/recent-activity/all/`;
+  return decodeURIComponent(match[1]);
 }
 
 async function waitForLogin(context, page, timeoutMs) {
@@ -275,17 +321,25 @@ async function main() {
 
   let { context, page } = await openSession(opts);
 
-  let url = await activityUrl(page);
-  if (!url) {
+  let me = await whoAmI(page);
+  if (!me) {
     ({ context, page } = await reauthenticate(opts, context));
-    url = await activityUrl(page);
-    if (!url) {
+    me = await whoAmI(page);
+    if (!me) {
       await context.close();
       fail("signed in, but LinkedIn is still serving its authwall");
     }
   }
 
-  console.log(`collecting ${opts.days} days from ${url}`);
+  const slug = opts.subject ? parseSubject(opts.subject) : me;
+  const isSelf = slug === me;
+  const url = activityFor(slug);
+  const out = opts.out || path.join(HERE, "subjects", slug, "raw.psv");
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+
+  console.log(`signed in as /in/${me}`);
+  console.log(`collecting ${opts.days} days from ${url}`
+    + (isSelf ? "" : "  (third party — stays local)"));
   await page.goto(url, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(2000);
 
@@ -295,20 +349,26 @@ async function main() {
   const fresh = parsePsv(psv);
   if (!fresh.size) fail("no activity found — the feed may have changed shape, or the window is empty");
 
-  const existing = opts.merge && fs.existsSync(opts.out)
-    ? parsePsv(fs.readFileSync(opts.out, "utf8"))
+  const existing = opts.merge && fs.existsSync(out)
+    ? parsePsv(fs.readFileSync(out, "utf8"))
     : new Map();
 
   const added = [...fresh.keys()].filter(ts => !existing.has(ts)).length;
   for (const [ts, event] of fresh) existing.set(ts, mergeEvent(existing.get(ts), event));
 
-  fs.writeFileSync(opts.out, formatPsv(existing));
-  console.log(`\nwrote ${path.relative(HERE, opts.out)}: ${existing.size} events (${added} new)\n`);
+  fs.writeFileSync(out, formatPsv(existing));
+  console.log(`\nwrote ${path.relative(HERE, out)}: ${existing.size} events (${added} new)\n`);
 
+  if (opts.out) {
+    console.log("--out set: analyze.py reads subjects/<slug>/raw.psv, so it was not run");
+    return;
+  }
   if (!opts.analyze) return;
 
-  const args = [path.join(HERE, "analyze.py"), opts.out, "--inject"];
+  const args = [path.join(HERE, "analyze.py"), "--subject", slug];
+  if (isSelf) args.push("--self");
   if (opts.tz) args.push("--tz", opts.tz);
+  if (opts.label) args.push("--label", opts.label);
   const run = spawnSync("python3", args, { stdio: "inherit" });
   if (run.status !== 0) process.exit(run.status ?? 1);
 }
@@ -320,4 +380,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { parsePsv, mergeEvent, formatPsv };
+module.exports = { parsePsv, mergeEvent, formatPsv, parseSubject };

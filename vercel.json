@@ -21,5 +21,6 @@
         }
       ]
     }
-  ]
+  ],
+  "installCommand": "echo 'no install: the deployed page is one static file'"
 }

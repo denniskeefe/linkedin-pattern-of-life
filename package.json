@@ -1,0 +1,12 @@
+{
+  "name": "linkedin-pattern-of-life",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Collect your own LinkedIn activity history and render it as a pattern-of-life report.",
+  "scripts": {
+    "collect": "node collect.js"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}

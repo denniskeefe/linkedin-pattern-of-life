@@ -6,3 +6,7 @@ embed.json
 public/
 .vercel
 .env*
+node_modules/
+
+# Browser profile holding the LinkedIn session. Never commit this.
+.browser/

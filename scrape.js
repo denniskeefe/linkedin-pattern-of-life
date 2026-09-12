@@ -1,6 +1,8 @@
 /* LinkedIn activity collector.
  *
- * Paste into the DevTools console on your own recent-activity page:
+ * collect.js loads this file into the page and calls lkCollect/lkExport for
+ * you; `npm run collect` is the normal way to run it. It also still works by
+ * hand. Paste into the DevTools console on your own recent-activity page:
  *   https://www.linkedin.com/in/<you>/recent-activity/all/
  *
  * Then drive it:

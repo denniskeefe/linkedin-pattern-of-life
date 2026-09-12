@@ -6,7 +6,7 @@ than the feed's "3w ago" labels.
 Built against one account over a 31-day window; the tooling is generic and the
 window is a flag.
 
-![pipeline](https://img.shields.io/badge/pipeline-scrape%20%E2%86%92%20analyze%20%E2%86%92%20dashboard-2a78d6)
+![pipeline](https://img.shields.io/badge/pipeline-collect%20%E2%86%92%20analyze%20%E2%86%92%20dashboard-2a78d6)
 
 ## Why the times are exact
 
@@ -29,32 +29,43 @@ timezone. No estimation, no rounding to the nearest week.
 
 ## Usage
 
-**1. Collect.** Open your own activity page and paste `scrape.js` into the
-DevTools console:
-
-```
-https://www.linkedin.com/in/<you>/recent-activity/all/
-```
-
-```js
-await lkCollect({ days: 30 })   // run this two or three times — see below
-copy(lkExport())                // clipboard now holds the raw.psv contents
-```
-
-Paste into `raw.psv`.
-
-**2. Analyze.**
+**1. Collect.**
 
 ```bash
-python3 analyze.py --inject
+npm install        # once; uses the Chrome you already have
+npm run collect    # three passes over the last 30 days, then analyze
 ```
 
-Prints a summary, writes `activity.json`, and refreshes the dataset embedded in
-`dashboard.html`.
+The first run opens a Chrome window and waits while you sign in to LinkedIn
+yourself — the script never handles credentials. The session is kept in
+`.browser/`, which is gitignored, and later runs are headless.
 
-**3. Open `dashboard.html`.** No build step and no server; it is a single file.
+From there it is one step: `collect.js` opens your activity page, scrolls it in
+small increments, reads each card as it renders, merges what it finds into
+`raw.psv`, and hands off to `analyze.py`. Nothing goes through the clipboard.
 
-**4. Export a PDF** (optional):
+```bash
+node collect.js --days 90        # a wider window
+node collect.js --passes 5       # more passes over the same window
+node collect.js --headed         # watch it scroll
+node collect.js --no-analyze     # stop after writing raw.psv
+node collect.js --replace        # overwrite raw.psv instead of merging
+node collect.js --tz Europe/London
+```
+
+Whose activity it reads is not a flag. The collector opens `/in/me/`, which
+LinkedIn resolves to whichever account holds the session, so it can only ever
+reach your own history.
+
+Runs merge into `raw.psv` keyed on publication time, keeping the fullest
+reading of each field, so collecting again accumulates rather than replaces —
+the same union the multi-pass design depends on. The summary line reports how
+many of the events were new.
+
+**2. Open `dashboard.html`.** No build step and no server; it is a single file
+with the dataset inlined.
+
+**3. Export a PDF** (optional):
 
 ```bash
 ./make_pdf.sh                      # -> linkedin-pattern-of-life.pdf
@@ -66,12 +77,38 @@ forces the light palette regardless of the screen theme, expands the event log
 into an appendix, and keeps charts from straddling page breaks. `Cmd+P` from the
 browser produces the same result.
 
-```bash
-python3 analyze.py --tz Europe/London    # report in a different timezone
-python3 analyze.py other.psv             # read a different collection
+### Collecting by hand
+
+`scrape.js` is still a paste-in console script, which is useful when Playwright
+is not available or the automated pass is blocked. Open your own activity page:
+
+```
+https://www.linkedin.com/in/<you>/recent-activity/all/
 ```
 
-Requires Python 3.9+ (for `zoneinfo`). No third-party packages.
+and paste the file into the DevTools console:
+
+```js
+await lkCollect({ days: 30 })   // run this two or three times — see below
+copy(lkExport())                // clipboard now holds the raw.psv contents
+```
+
+Paste into `raw.psv`, then:
+
+```bash
+python3 analyze.py --inject      # summary, activity.json, dashboard refresh
+python3 analyze.py --tz Europe/London
+python3 analyze.py other.psv
+```
+
+Both paths run the same harvest: `collect.js` loads `scrape.js` and calls the
+functions it defines, rather than keeping a second copy of the card parsing.
+
+Requires Python 3.9+ (for `zoneinfo`) and no third-party Python packages. The
+automated path additionally needs Node and Playwright, which `npm install`
+covers; it drives your installed Chrome, so no browser download is involved. If
+you have no Chrome, run `npx playwright install chromium` and it will use that
+instead.
 
 ## Two things the feed does that shape the code
 
@@ -127,12 +164,14 @@ an unguessable URL.
 
 | File | |
 |---|---|
-| `scrape.js` | Console collector — multi-pass, virtualization-aware |
+| `collect.js` | Automated collector — drives Chrome, writes `raw.psv`, runs the analysis |
+| `scrape.js` | The harvest itself — loaded by `collect.js`, pasteable into the console |
 | `raw.psv` | Collected events, pipe-delimited, oldest first |
 | `analyze.py` | Summary, `activity.json`, dashboard injection |
 | `activity.json` | Full parsed dataset, one object per event |
 | `dashboard.html` | Self-contained dashboard, data inlined |
 | `make_pdf.sh` | Renders the dashboard to PDF via headless Chrome |
+| `.browser/` | Chrome profile holding the LinkedIn session; gitignored |
 
 ## The dashboard
 

@@ -41,7 +41,7 @@ function parseArgs(argv) {
     merge: true,
     analyze: true,
     tz: null,
-    loginWaitMs: 5 * 60 * 1000
+    loginWaitMs: 15 * 60 * 1000
   };
 
   for (let i = 0; i < argv.length; i++) {
@@ -56,6 +56,7 @@ function parseArgs(argv) {
       case "--passes":     opts.passes = Number(next()); break;
       case "--out":        opts.out = path.resolve(next()); break;
       case "--tz":         opts.tz = next(); break;
+      case "--login-timeout": opts.loginWaitMs = Number(next()) * 60 * 1000; break;
       case "--headed":     opts.headed = true; break;
       case "--replace":    opts.merge = false; break;
       case "--no-analyze": opts.analyze = false; break;
@@ -67,6 +68,7 @@ function parseArgs(argv) {
 
   if (!Number.isFinite(opts.days) || opts.days <= 0) fail("--days must be a positive number");
   if (!Number.isFinite(opts.passes) || opts.passes <= 0) fail("--passes must be a positive number");
+  if (!Number.isFinite(opts.loginWaitMs) || opts.loginWaitMs <= 0) fail("--login-timeout must be a positive number of minutes");
   return opts;
 }
 
@@ -74,13 +76,14 @@ function usage() {
   console.log(`
 Usage: node collect.js [options]
 
-  --days N        window to collect, in days (default: 30)
-  --passes N      scroll passes to run (default: 3)
-  --out FILE      where to write the events (default: raw.psv)
-  --tz ZONE       timezone to pass to analyze.py
-  --headed        show the browser window
-  --replace       overwrite the existing file instead of merging into it
-  --no-analyze    stop after writing the file
+  --days N            window to collect, in days (default: 30)
+  --passes N          scroll passes to run (default: 3)
+  --out FILE          where to write the events (default: raw.psv)
+  --tz ZONE           timezone to pass to analyze.py
+  --login-timeout N   minutes to wait for sign-in (default: 15)
+  --headed            show the browser window
+  --replace           overwrite the existing file instead of merging into it
+  --no-analyze        stop after writing the file
 `.trim());
 }
 
@@ -139,11 +142,16 @@ async function launch({ headed }) {
   }
 }
 
-async function signedIn(page) {
-  const url = page.url();
-  if (/\/(login|authwall|checkpoint|signup)\b/.test(url)) return false;
-  if (await page.locator('input[name="session_key"]').count()) return false;
-  return true;
+/* li_at is the session cookie LinkedIn sets on sign-in. Asking for it beats
+   inspecting the URL: a signed-out visit can land on the feed, the authwall,
+   a checkpoint or a marketing page depending on what it thinks you are. */
+async function signedIn(context) {
+  const cookies = await context.cookies("https://www.linkedin.com");
+  return cookies.some(c => c.name === "li_at" && c.value);
+}
+
+function onAuthwall(page) {
+  return /\/(login|authwall|checkpoint|signup|uas)\b/.test(page.url());
 }
 
 /* Resolve the signed-in account's activity feed. /in/me/ is LinkedIn's own
@@ -151,6 +159,7 @@ async function signedIn(page) {
 async function activityUrl(page) {
   await page.goto("https://www.linkedin.com/in/me/", { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(1500);
+  if (onAuthwall(page)) return null;
 
   let match = page.url().match(/linkedin\.com\/in\/([^/?#]+)/);
   if (match && match[1] !== "me") {
@@ -159,24 +168,34 @@ async function activityUrl(page) {
 
   // The redirect did not resolve; read the slug off the profile link instead.
   await page.goto("https://www.linkedin.com/feed/", { waitUntil: "domcontentloaded" });
+  if (onAuthwall(page)) return null;
   const href = await page.locator('a[href*="/in/"]').first().getAttribute("href").catch(() => null);
   match = href && href.match(/\/in\/([^/?#]+)/);
   if (!match) throw new Error("could not resolve the signed-in profile");
   return `https://www.linkedin.com/in/${match[1]}/recent-activity/all/`;
 }
 
-async function waitForLogin(page, timeoutMs) {
+async function waitForLogin(context, page, timeoutMs) {
+  const minutes = Math.round(timeoutMs / 60000);
   console.log("\nA Chrome window is open. Sign in to LinkedIn there — this script");
-  console.log("never sees your credentials — and collection starts on its own.\n");
+  console.log("never sees your credentials — and collection starts on its own.");
+  console.log(`Waiting up to ${minutes} minutes; --login-timeout changes that.\n`);
 
   await page.goto("https://www.linkedin.com/login", { waitUntil: "domcontentloaded" });
 
   const deadline = Date.now() + timeoutMs;
+  let nextNotice = Date.now() + 60000;
+
   while (Date.now() < deadline) {
     await page.waitForTimeout(2000);
-    if (page.url().includes("/feed") && await signedIn(page)) {
-      console.log("signed in, session saved to .browser/\n");
+    if (await signedIn(context)) {
+      console.log("signed in; session saved to .browser/\n");
       return true;
+    }
+    if (Date.now() >= nextNotice) {
+      const left = Math.ceil((deadline - Date.now()) / 60000);
+      console.log(`  still waiting for sign-in — ${left} minute${left === 1 ? "" : "s"} left`);
+      nextNotice = Date.now() + 60000;
     }
   }
   return false;
@@ -208,31 +227,64 @@ async function collect(page, opts) {
 
 /* ---- main --------------------------------------------------------------- */
 
-async function main() {
-  const opts = parseArgs(process.argv.slice(2));
-  const firstRun = !fs.existsSync(PROFILE_DIR);
-
-  let context = await launch({ headed: opts.headed || firstRun });
+/* A signed-in page. Runs headless when the saved session still works, and only
+   opens a window when someone has to type into it. */
+async function openSession(opts) {
+  let headed = opts.headed;
+  let context = await launch({ headed });
   let page = context.pages()[0] || await context.newPage();
   context.setDefaultTimeout(60000);
 
-  await page.goto("https://www.linkedin.com/feed/", { waitUntil: "domcontentloaded" });
-
-  if (!await signedIn(page)) {
-    if (context.browser()?.isConnected() && !opts.headed && !firstRun) {
-      // The saved session expired while we were headless. Come back visible.
+  if (!await signedIn(context)) {
+    if (!headed) {
       await context.close();
-      context = await launch({ headed: true });
+      headed = true;
+      context = await launch({ headed });
       page = context.pages()[0] || await context.newPage();
       context.setDefaultTimeout(60000);
     }
-    if (!await waitForLogin(page, opts.loginWaitMs)) {
+    if (!await waitForLogin(context, page, opts.loginWaitMs)) {
       await context.close();
-      fail("timed out waiting for sign-in");
+      fail("timed out waiting for sign-in — run it again when you have a moment,"
+           + "\n         or allow longer with --login-timeout <minutes>");
     }
   }
 
-  const url = await activityUrl(page);
+  return { context, page };
+}
+
+/* The cookie outlived the session it stood for. Start the profile clean rather
+   than retrying against a credential LinkedIn has already stopped honouring. */
+async function reauthenticate(opts, context) {
+  await context.close();
+  const fresh = await launch({ headed: true });
+  const page = fresh.pages()[0] || await fresh.newPage();
+  fresh.setDefaultTimeout(60000);
+  await fresh.clearCookies();
+
+  console.log("the saved session has expired");
+  if (!await waitForLogin(fresh, page, opts.loginWaitMs)) {
+    await fresh.close();
+    fail("timed out waiting for sign-in");
+  }
+  return { context: fresh, page };
+}
+
+async function main() {
+  const opts = parseArgs(process.argv.slice(2));
+
+  let { context, page } = await openSession(opts);
+
+  let url = await activityUrl(page);
+  if (!url) {
+    ({ context, page } = await reauthenticate(opts, context));
+    url = await activityUrl(page);
+    if (!url) {
+      await context.close();
+      fail("signed in, but LinkedIn is still serving its authwall");
+    }
+  }
+
   console.log(`collecting ${opts.days} days from ${url}`);
   await page.goto(url, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(2000);

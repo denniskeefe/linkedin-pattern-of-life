@@ -36,9 +36,13 @@ npm install        # once; uses the Chrome you already have
 npm run collect    # three passes over the last 30 days, then analyze
 ```
 
-The first run opens a Chrome window and waits while you sign in to LinkedIn
-yourself — the script never handles credentials. The session is kept in
-`.browser/`, which is gitignored, and later runs are headless.
+The first run opens a Chrome window and waits up to fifteen minutes while you
+sign in to LinkedIn yourself — the script never handles credentials, and
+`--login-timeout <minutes>` adjusts the wait. The session is then kept in
+`.browser/`, which is gitignored, and later runs are headless. Sign-in is
+detected by the presence of LinkedIn's own `li_at` cookie, so an expired
+session is noticed rather than collected through: the collector reopens a
+window and asks for a fresh one.
 
 From there it is one step: `collect.js` opens your activity page, scrolls it in
 small increments, reads each card as it renders, merges what it finds into
@@ -51,6 +55,7 @@ node collect.js --headed         # watch it scroll
 node collect.js --no-analyze     # stop after writing raw.psv
 node collect.js --replace        # overwrite raw.psv instead of merging
 node collect.js --tz Europe/London
+node collect.js --login-timeout 30
 ```
 
 Whose activity it reads is not a flag. The collector opens `/in/me/`, which

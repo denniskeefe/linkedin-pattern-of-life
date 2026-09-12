@@ -6,7 +6,3 @@ embed.json
 public/
 .vercel
 .env*
-
-# Collected profile data. Third-party activity histories are kept off the repo
-# deliberately; see "Subjects other than your own" in the README.
-subjects/

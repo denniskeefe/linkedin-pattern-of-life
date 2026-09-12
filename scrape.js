@@ -1,16 +1,12 @@
 /* LinkedIn activity collector.
  *
- * Paste into the DevTools console on a recent-activity page:
- *   https://www.linkedin.com/in/<slug>/recent-activity/all/
+ * Paste into the DevTools console on your own recent-activity page:
+ *   https://www.linkedin.com/in/<you>/recent-activity/all/
  *
  * Then drive it:
  *   await lkCollect({ days: 30 })   // one pass
  *   await lkCollect({ days: 30 })   // run 2-3 times; results accumulate
  *   copy(lkExport())                // pipe-delimited, for analyze.py
- *
- * Paste the clipboard into subjects/<slug>/raw.psv. lkSubject() prints the slug
- * and the exact path. Switching profiles means reloading the page, so reset
- * first: lkReset() — otherwise the store still holds the previous subject.
  *
  * Two things about this feed shape the design:
  *
@@ -27,19 +23,6 @@
  */
 
 window.lkStore = window.lkStore || new Map();
-
-/* The profile slug this page belongs to. Collecting a second subject without
-   resetting would silently merge two people's activity into one file. */
-function lkSubject() {
-  const slug = (location.pathname.match(/\/in\/([^/]+)/) || [])[1] || "unknown";
-  console.log("subject: " + slug + "  ->  subjects/" + slug + "/raw.psv");
-  return slug;
-}
-
-function lkReset() {
-  window.lkStore = new Map();
-  console.log("store cleared");
-}
 
 function lkParseCount(s) {
   if (!s) return 0;
@@ -163,8 +146,7 @@ async function lkCollect(opts) {
   }
 
   lkHarvest(cutoff);
-  console.log("collected " + window.lkStore.size + " events in the last " + days +
-              " days for " + lkSubject());
+  console.log("collected " + window.lkStore.size + " events in the last " + days + " days");
   return window.lkStore.size;
 }
 

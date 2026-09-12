@@ -67,10 +67,23 @@ reading of each field, so collecting again accumulates rather than replaces —
 the same union the multi-pass design depends on. The summary line reports how
 many of the events were new.
 
-**2. Open `dashboard.html`.** No build step and no server; it is a single file
-with the dataset inlined.
+**2. Open `dashboard.html`** for the interactive read, or `graphic.html` for the
+poster — one page that leads with the finding rather than the charts. Both are
+single files with the dataset inlined; `analyze.py --inject` refreshes both.
 
-**3. Export a PDF** (optional):
+**3. Export the poster** (optional):
+
+```bash
+./make_graphic.sh                    # -> pattern-of-life.png, light, 2x
+THEME=dark ./make_graphic.sh         # dark palette
+WIDTH=1600 ./make_graphic.sh ~/Desktop/pol.png
+```
+
+Captures the full page at twice the pixel density, so it holds up when shared or
+printed. It reuses the Playwright installed for collection; without it, it falls
+back to headless Chrome.
+
+**4. Export a PDF of the dashboard** (optional):
 
 ```bash
 ./make_pdf.sh                      # -> linkedin-pattern-of-life.pdf
@@ -174,8 +187,10 @@ an unguessable URL.
 | `raw.psv` | Collected events, pipe-delimited, oldest first |
 | `analyze.py` | Summary, `activity.json`, dashboard injection |
 | `activity.json` | Full parsed dataset, one object per event |
-| `dashboard.html` | Self-contained dashboard, data inlined |
+| `dashboard.html` | Self-contained interactive dashboard, data inlined |
+| `graphic.html` | Poster view — hero finding, heatmap, cadence, table views |
 | `make_pdf.sh` | Renders the dashboard to PDF via headless Chrome |
+| `make_graphic.sh` | Renders the poster to PNG at 2x |
 | `.browser/` | Chrome profile holding the LinkedIn session; gitignored |
 
 ## The dashboard

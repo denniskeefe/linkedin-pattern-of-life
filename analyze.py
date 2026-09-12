@@ -161,7 +161,10 @@ def main():
     print(f"\nwrote {out.name}")
 
     if args.inject:
-        inject(events, HERE / "dashboard.html")
+        for page in ("dashboard.html", "graphic.html"):
+            target = HERE / page
+            if target.exists():
+                inject(events, target)
 
 
 if __name__ == "__main__":

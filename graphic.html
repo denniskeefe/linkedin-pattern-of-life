@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LinkedIn Pattern of Life — the graphic</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg:        #f4f6f8;
+  --surface:   #ffffff;
+  --surface-2: #eef1f5;
+  --line:      #d8dee7;
+  --line-soft: #e6eaf0;
+  --ink:       #11161d;
+  --ink-2:     #4a5462;
+  --ink-3:     #78828f;
+  --accent:    #2a78d6;
+
+  /* Sequential blue, validated for this surface (ordinal checks, light mode).
+     c0 is "nothing happened" and is allowed to recede into the surface. */
+  --c0: #e9ecf1;
+  --c1: #86b6ef;
+  --c2: #3987e5;
+  --c3: #256abf;
+  --c4: #0d366b;
+
+  --f-display: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --f-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --shadow: 0 1px 2px rgba(17,22,29,.05), 0 10px 30px -18px rgba(17,22,29,.25);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg:        #101319;
+    --surface:   #171c24;
+    --surface-2: #1e242e;
+    --line:      #2c3543;
+    --line-soft: #232a34;
+    --ink:       #e9edf3;
+    --ink-2:     #a5b0bf;
+    --ink-3:     #7b8697;
+    --accent:    #3987e5;
+
+    /* The ramp flips anchor in dark: near-zero recedes into the dark surface,
+       so magnitude runs dark -> light. Validated against #171c24. */
+    --c0: #1e242e;
+    --c1: #184f95;
+    --c2: #256abf;
+    --c3: #3987e5;
+    --c4: #86b6ef;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -18px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:        #101319;
+  --surface:   #171c24;
+  --surface-2: #1e242e;
+  --line:      #2c3543;
+  --line-soft: #232a34;
+  --ink:       #e9edf3;
+  --ink-2:     #a5b0bf;
+  --ink-3:     #7b8697;
+  --accent:    #3987e5;
+  --c0: #1e242e;
+  --c1: #184f95;
+  --c2: #256abf;
+  --c3: #3987e5;
+  --c4: #86b6ef;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -18px rgba(0,0,0,.6);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.sheet {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 48px 40px 64px;
+}
+
+/* ---- masthead ---------------------------------------------------------- */
+header { border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 34px; }
+h1 { font-family: var(--f-display); font-size: 40px; line-height: 1.1; margin: 0 0 10px; letter-spacing: -.01em; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 22px; font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; }
+
+/* ---- hero -------------------------------------------------------------- */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(300px, 1.05fr) 1fr;
+  gap: 30px;
+  align-items: stretch;
+  margin-bottom: 34px;
+}
+.hero-figure {
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 26px 28px 24px;
+}
+.hero-figure .value {
+  font-family: var(--f-body);
+  font-size: 76px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -.03em;
+  margin-bottom: 12px;
+}
+.hero-figure .say { font-size: 17px; color: var(--ink); margin: 0 0 14px; max-width: 40ch; }
+.hero-figure .windows { display: flex; gap: 10px; flex-wrap: wrap; }
+.pill {
+  font-family: var(--f-mono); font-size: 12px; letter-spacing: .04em;
+  background: var(--surface-2); border: 1px solid var(--line-soft);
+  border-radius: 999px; padding: 4px 11px; color: var(--ink-2);
+}
+.pill b { color: var(--ink); font-weight: 600; }
+
+.tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.tile {
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.tile .label { font-size: 12px; color: var(--ink-3); text-transform: uppercase; letter-spacing: .06em; font-family: var(--f-mono); }
+.tile .value { font-size: 30px; font-weight: 600; line-height: 1.15; margin-top: 4px; letter-spacing: -.02em; }
+.tile .note { font-size: 13px; color: var(--ink-2); }
+
+/* ---- panels ------------------------------------------------------------ */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 24px 26px 26px;
+  margin-bottom: 26px;
+}
+.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 18px; }
+h2 { font-family: var(--f-display); font-size: 23px; margin: 0; font-weight: 600; letter-spacing: -.01em; }
+.panel-head p { margin: 0; color: var(--ink-2); font-size: 14px; max-width: 52ch; }
+h3 { font-size: 13px; font-family: var(--f-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); margin: 0 0 10px; font-weight: 500; }
+
+/* ---- heatmap ----------------------------------------------------------- */
+.grid-wrap { overflow-x: auto; }
+.grid { display: grid; grid-template-columns: 34px repeat(24, minmax(28px, 1fr)); gap: 2px; min-width: 760px; }
+.grid .hlab, .grid .dlab { font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); display: flex; align-items: center; }
+.grid .hlab { justify-content: center; padding-bottom: 4px; }
+.grid .dlab { justify-content: flex-end; padding-right: 8px; }
+.cell { aspect-ratio: 1 / 1; border-radius: 3px; background: var(--c0); cursor: default; }
+.cell[data-n="0"] { background: var(--c0); }
+.cell[data-n="1"] { background: var(--c1); }
+.cell[data-n="2"] { background: var(--c2); }
+.cell[data-n="3"] { background: var(--c3); }
+.cell[data-n="4"] { background: var(--c4); }
+.cell:hover { outline: 2px solid var(--ink); outline-offset: 1px; }
+.band { grid-column: 2 / -1; display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; margin-top: 6px; }
+.band span { height: 3px; border-radius: 2px; }
+.band span.on { background: var(--accent); }
+.legend { display: flex; align-items: center; gap: 10px; margin-top: 16px; font-family: var(--f-mono); font-size: 11px; color: var(--ink-3); }
+.legend .swatches { display: flex; gap: 2px; }
+.legend i { width: 26px; height: 12px; border-radius: 3px; display: block; }
+
+/* ---- column charts ----------------------------------------------------- */
+.cols { display: grid; gap: 2px; align-items: stretch; }
+.col { position: relative; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.col .bar {
+  width: 100%; max-width: 24px;
+  background: var(--c2);
+  border-radius: 4px 4px 0 0;
+  min-height: 2px;
+}
+.col.thin .bar { background: var(--c1); }
+.col.empty .bar { background: var(--c0); }
+.axis { display: grid; gap: 2px; margin-top: 6px; font-family: var(--f-mono); font-size: 10px; color: var(--ink-3); text-align: center; }
+.vlabel { position: absolute; top: -19px; left: 50%; transform: translateX(-50%); font-family: var(--f-mono); font-size: 11px; color: var(--ink-2); white-space: nowrap; }
+.pair { display: grid; gap: 26px; }
+
+/* ---- table view -------------------------------------------------------- */
+details { margin-top: 10px; border-top: 1px solid var(--line-soft); padding-top: 14px; }
+summary { cursor: pointer; font-family: var(--f-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+table { border-collapse: collapse; width: 100%; margin-top: 14px; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+th { font-family: var(--f-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); font-weight: 500; }
+td.num, th.num { text-align: right; }
+td.text { white-space: normal; color: var(--ink-2); max-width: 460px; }
+
+footer { color: var(--ink-3); font-size: 13px; border-top: 1px solid var(--line); padding-top: 18px; margin-top: 34px; }
+footer p { margin: 0 0 8px; max-width: 74ch; }
+
+/* ---- tooltip ----------------------------------------------------------- */
+#tip {
+  position: fixed; pointer-events: none; opacity: 0; transition: opacity .1s;
+  background: var(--ink); color: var(--bg); font-size: 12px; font-family: var(--f-mono);
+  padding: 6px 9px; border-radius: 6px; z-index: 20; white-space: nowrap;
+}
+
+@media (max-width: 820px) {
+  .hero { grid-template-columns: 1fr; }
+  .sheet { padding: 28px 18px 40px; }
+  h1 { font-size: 30px; }
+  .hero-figure .value { font-size: 58px; }
+}
+
+@media print {
+  :root { color-scheme: light; --bg: #fff; --surface: #fff; }
+  body { background: #fff; }
+  .sheet { max-width: none; padding: 0; }
+  .panel, .tile, .hero-figure { box-shadow: none; break-inside: avoid; }
+  details { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <header>
+    <h1>Pattern of Life</h1>
+    <div class="meta">
+      <span id="m-window">—</span>
+      <span id="m-count">—</span>
+      <span id="m-tz">—</span>
+    </div>
+  </header>
+
+  <div class="hero">
+    <div class="hero-figure">
+      <div class="value" id="hero-value">—</div>
+      <p class="say" id="hero-say">—</p>
+      <div class="windows" id="hero-windows"></div>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>The week, hour by hour</h2>
+      <p>Every event placed on the weekday and hour it was published. Darker is
+         more. The rule beneath the hours marks the two busiest four-hour windows.</p>
+    </div>
+    <div class="grid-wrap"><div class="grid" id="grid"></div></div>
+    <div class="legend">
+      <span>events per cell</span>
+      <span class="swatches" id="legend-swatches"></span>
+      <span id="legend-max">—</span>
+    </div>
+    <details>
+      <summary>Table view — events per weekday and hour</summary>
+      <div style="overflow-x:auto"><table id="matrix"></table></div>
+    </details>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>When it goes out, and what it earns</h2>
+      <p>Two measures, two charts, one shared hour axis — the hour with the most
+         posts is not the hour with the most reactions.</p>
+    </div>
+    <div class="pair">
+      <div>
+        <h3>Events published</h3>
+        <div class="cols" id="vol"></div>
+        <div class="axis" id="vol-axis"></div>
+      </div>
+      <div>
+        <h3>Average reactions per event</h3>
+        <div class="cols" id="reach"></div>
+        <div class="axis" id="reach-axis"></div>
+        <p style="font-size:13px;color:var(--ink-3);margin:10px 0 0" id="thin-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Day by day</h2>
+      <p>Cadence across the window. Flat days are days nothing was published.</p>
+    </div>
+    <div class="cols" id="cadence"></div>
+    <div class="axis" id="cadence-axis"></div>
+    <details>
+      <summary>Table view — every event</summary>
+      <div style="overflow-x:auto"><table id="log"></table></div>
+    </details>
+  </section>
+
+  <footer>
+    <p><b>Counts are a floor, not a census.</b> The activity feed paginates
+       non-deterministically: independent passes over the same range return
+       overlapping but non-identical sets. Collection takes the union of several
+       passes, so anything missed is missing from these figures too.</p>
+    <p>Times are decoded from each activity id — a snowflake whose high bits are
+       the publication time in milliseconds — not from the feed's relative labels.
+       Hours with fewer than three events are marked thin; they are anecdotes.</p>
+    <p id="foot-gen"></p>
+  </footer>
+</div>
+
+<div id="tip"></div>
+
+<script id="data" type="application/json">[{"t":"2026-08-12T07:58","k":"post","r":17,"c":0,"p":2,"m":"image","x":"New blog post \"OSINT Lens\""},{"t":"2026-08-12T13:50","k":"repost","r":16,"c":3,"p":1,"m":"image","x":"His path to OSINT runs through nearly two decades"},{"t":"2026-08-12T18:50","k":"repost","r":83,"c":2,"p":14,"m":"image","x":"Mastering Visual OSINT: Turn pictures into intel"},{"t":"2026-08-12T20:59","k":"post","r":9,"c":0,"p":1,"m":"image","x":"OSINT Job Tracker Aug 12, 2026"},{"t":"2026-08-12T21:21","k":"repost","r":3,"c":0,"p":2,"m":"link","x":"New research platform and podcast coming soon"},{"t":"2026-08-13T08:27","k":"repost","r":9,"c":0,"p":3,"m":"image","x":"Now accepting Membership Applications! www.INWPIA.org/membership"},{"t":"2026-08-13T09:56","k":"repost","r":95,"c":12,"p":6,"m":"image","x":"I pray this blesses people who are in the same season I have been in. Rest you must, but don't give up! hashtag #Earlycybercareer hashtag #Inspiration hashtag #Lessonslearned hashtag #Chicagocyber hashtag #Wicys hashtag #ISACAChicagochapter"},{"t":"2026-08-14T16:52","k":"repost","r":6,"c":0,"p":1,"m":"link","x":"New platform coming soon!! https://lnkd.in/ejaJScwu"},{"t":"2026-08-14T17:41","k":"post","r":6,"c":0,"p":0,"m":"image","x":"OSINT Job Tracker August 14, 2026 United States and Canada ---> https://osint.jobs hashtag #OSINT"},{"t":"2026-08-14T18:22","k":"post","r":48,"c":3,"p":2,"m":"video","x":"I created the Chrome extension \"OSINT Lens\" because I saw a need and wanted to create a solution. I spent all day today conducting investigations and I am happy to say that \"OSINT Lens\" was a great help. I realize that this extension may be"},{"t":"2026-08-14T18:41","k":"repost","r":22,"c":1,"p":5,"m":"video","x":"Did you know OSMOSIS has grown to over 3,000 members? And that we've certified over 500 investigative professionals? While the OSC remains the only globally recognized open-source credential in the field. That's something to celebrate! Whet"},{"t":"2026-08-15T09:10","k":"post","r":23,"c":1,"p":1,"m":"image","x":""},{"t":"2026-08-15T18:21","k":"repost","r":16,"c":0,"p":5,"m":"video","x":"\ud83d\udcddData without human context is just noise. If you want OSINT to yield real investigative leads, you have to know how to ask the right human questions first. \ud83c\udf99\ufe0fCharlie J. McNamara, owner of Sidney Black Investigations, talks with myself an"},{"t":"2026-08-18T13:08","k":"repost","r":18,"c":1,"p":3,"m":"link","x":"I was recently a guest on a podcast"},{"t":"2026-08-18T18:26","k":"repost","r":29,"c":2,"p":5,"m":"image","x":"SPONSOR ALERT! We are incredibly excited to welcome"},{"t":"2026-08-18T19:04","k":"repost","r":18,"c":2,"p":2,"m":"video","x":"\u26a1 CareerByte \u2014 Quick Tip #5 Real Advice from the Tech Desk BECOME EASY TO WORK WITH. You don\u2019t have to be the smartest person in the room. You don\u2019t have to know every tool. But be dependable. Be professional. Communicate clearly. Follow th"},{"t":"2026-08-18T19:24","k":"post","r":7,"c":0,"p":1,"m":"image","x":"OSINT Job Tracker August 18, 2026 United States and Canada ---> https://osint.jobs hashtag #OSINT"},{"t":"2026-08-18T19:25","k":"repost","r":27,"c":6,"p":2,"m":"link","x":"Happy Taco Tuesday!!! I did a thing... Thank you Kathy Chambers for giving me the time and platform to share my experience! https://lnkd.in/gueBdhBs hashtag #Earlycyber hashtag #ChicagoTech hashtag #Chicagocyber hashtag #ISACA hashtag #ISAC"},{"t":"2026-08-18T21:17","k":"repost","r":17,"c":4,"p":1,"m":"image","x":"F1NDX is now a training partner of Intelligence for Good. Intelligence for Good is a nonprofit that pursues justice for victims of internet-enabled crime, including romance scams, cryptocurrency scams, and call center scams. Their work conn"},{"t":"2026-08-19T07:31","k":"post","r":141,"c":6,"p":12,"m":"image","x":"Private investigators: how much time do you spend digging for info online? Some OSINT training is full of theory and not much you can actually use on a case. This guide skips that. It's a field guide built for real PI work, written by a lic"},{"t":"2026-08-19T19:30","k":"repost","r":3,"c":0,"p":2,"m":"link","x":"Ever wonder about how the real professionals do it?!?! Check out our recent podcasts with Charlie McNamara from Sidney Black Investigations on our website or on your favorite streaming service! theosintoutput.com Chris St. Germain Tim Farme"},{"t":"2026-08-19T21:26","k":"repost","r":45,"c":8,"p":1,"m":"image","x":"\ud83c\udf99\ufe0f Cyber Tech Podcast \u2013 Episode #39 Coming Soon! Beyond the Keyboard: Creativity Meets Cybersecurity I just finished an awesome conversation with Kathy Chambers, host of the Authentically Cyber podcast and Founder & Storytelling Strategist"},{"t":"2026-08-20T06:00","k":"post","r":21,"c":0,"p":3,"m":"image","x":""},{"t":"2026-08-20T07:30","k":"post","r":9,"c":0,"p":1,"m":"image","x":"Business owners: do you know what hackers can see about your company right now? Most small businesses find out the hard way \u2014 after a breach, not before. Sentry Monitor gives you a free 60-second scan that checks: * If scammers can fake ema"},{"t":"2026-08-23T08:20","k":"post","r":31,"c":3,"p":2,"m":"image","x":""},{"t":"2026-08-23T20:05","k":"repost","r":43,"c":0,"p":6,"m":"image","x":""},{"t":"2026-08-24T06:00","k":"post","r":20,"c":0,"p":1,"m":"image","x":""},{"t":"2026-08-24T06:15","k":"post","r":12,"c":2,"p":2,"m":"image","x":"Are you running a statice website? Are you aware of the risks? Static websites are fast, lightweight, and easy to deploy\u2014but they are also exceptionally easy to clone. Because flat HTML, CSS, and client-side JavaScript are delivered directl"},{"t":"2026-08-24T09:34","k":"post","r":13,"c":0,"p":2,"m":"image","x":"OSINT Job Tracker August 24, 2026 United States and Canada ---> https://osint.jobs hashtag #OSINT"},{"t":"2026-08-25T04:47","k":"post","r":31,"c":2,"p":1,"m":"image","x":""},{"t":"2026-08-25T20:07","k":"post","r":4,"c":0,"p":1,"m":"image","x":"OSINT Job Tracker August 25, 2026 United States and Canada ---> https://osint.jobs hashtag #OSINT"},{"t":"2026-08-25T20:09","k":"repost","r":23,"c":2,"p":3,"m":"image","x":"\ud83c\udfa4 Member Spotlight   Brett Redman, OSC: Lessons from Rap for OSINT Analysts Brett Redman\u2019s latest feature on the OSMOSIS website, \"Rap on Trial: What the Tupac Case Tells Us About OSINT, Gangs and Evidence,\" delivers a crucial reminder for"},{"t":"2026-08-25T20:09","k":"repost","r":5,"c":0,"p":3,"m":"image","x":"Great Discounts are now available to INWPIA / CYBER-OSINT Division Members from OSMOSIS Association! INWPIA   CYBER-OSINT Division members can register for the OSC Exam using code: INWPIA10. This is a 10% discount for online use. Click the"},{"t":"2026-08-26T06:43","k":"post","r":41,"c":2,"p":3,"m":"image","x":""},{"t":"2026-08-26T07:24","k":"post","r":10,"c":1,"p":0,"m":"image","x":"Are you familiar with Canary Tokens? Do you struggle with understanding which tokens could be used for your website? I created this tool to help people better understand which tokens to use. ---> https://lnkd.in/e6zKrhEf hashtag #CanaryToke"},{"t":"2026-09-01T05:57","k":"post","r":34,"c":2,"p":2,"m":"image","x":""},{"t":"2026-09-01T06:31","k":"post","r":6,"c":1,"p":0,"m":"image","x":"Are you aware that in many cases, someone can easily clone your website? It is very likely that if this was to occur, you would have no idea that it had been cloned. This means that potential clients and customers could be tricked into send"},{"t":"2026-09-01T18:46","k":"post","r":18,"c":1,"p":1,"m":"image","x":"OSINT Job Tracker September 1, 2026 United States and Canada ---> https://osint.jobs hashtag #OSINT"},{"t":"2026-09-03T06:00","k":"post","r":51,"c":1,"p":2,"m":"image","x":""},{"t":"2026-09-04T06:40","k":"post","r":58,"c":3,"p":4,"m":"image","x":""},{"t":"2026-09-04T06:54","k":"post","r":15,"c":0,"p":3,"m":"image","x":"OSINT Job Tracker September 4, 2026 United States and Canada ---> https://osint.jobs hashtag #OSINT"},{"t":"2026-09-04T12:37","k":"repost","r":4,"c":0,"p":2,"m":"image","x":"YES! INWPIA MEMBERSHIP DRIVE SPECIAL! 50% off Active / CYBER-OSINT Memberships (For a limited time!) USE CODE: SAVE-50 hashtag #INWPIA"},{"t":"2026-09-04T19:11","k":"repost","r":15,"c":0,"p":3,"m":"image","x":"We're excited to announce a new OSMOSIS Corporate Partner with the Inland Western Pacific Investigators Association (INWPIA). Together we are partnering to support the advancement of the OSINT profession, bringing our two communities closer"},{"t":"2026-09-06T08:07","k":"post","r":51,"c":7,"p":3,"m":"image","x":""},{"t":"2026-09-07T06:00","k":"post","r":33,"c":4,"p":1,"m":"image","x":""},{"t":"2026-09-08T06:00","k":"post","r":39,"c":2,"p":1,"m":"image","x":""},{"t":"2026-09-08T06:15","k":"post","r":7,"c":0,"p":0,"m":"image","x":"The Voight-Kampff test doesn't ask you who you are"},{"t":"2026-09-09T06:00","k":"post","r":22,"c":3,"p":3,"m":"image","x":""},{"t":"2026-09-10T11:01","k":"post","r":21,"c":0,"p":1,"m":"image","x":""},{"t":"2026-09-10T11:11","k":"repost","r":31,"c":4,"p":4,"m":"image","x":"F1NDX has established a partnership with OSINT"},{"t":"2026-09-10T11:22","k":"repost","r":84,"c":14,"p":3,"m":"image","x":"If you are looking to preorder my book Deep Dive"},{"t":"2026-09-10T11:52","k":"post","r":2,"c":0,"p":0,"m":"image","x":"OSINT Job Tracker September 10, 2026"},{"t":"2026-09-10T12:03","k":"post","r":9,"c":0,"p":0,"m":"image","x":"In the last 90 days, my Chrome extension \"OSINT Lens\" has had 250 installs. If you have downloaded it, I would really appreciate hearing your feedback. If you haven't yet tried it, you can access it here. Please feel free to share any const"},{"t":"2026-09-10T13:24","k":"post","r":7,"c":0,"p":0,"m":"image","x":"Have you heard of a micro-school? I have been helping my wife with her recently launched farm based micro-school. This school is located on a 28 acre historic farm in our community which we have been granted access to use. We have cows, goa"},{"t":"2026-09-11T06:00","k":"post","r":17,"c":1,"p":1,"m":"image","x":""},{"t":"2026-09-11T06:30","k":"post","r":17,"c":0,"p":4,"m":"image","x":"Do you use \"Have I Been Pwned?\" Have you ever wanted to search multiple email addresses simultaneously? ---> https://lnkd.in/eAjFtAVt I created this tool called \"Pwned Lookup\" that allows you to do just that. Just add your HIBP API key and"},{"t":"2026-09-11T09:35","k":"repost","r":14,"c":2,"p":6,"m":"image","x":"He has never been to Georgia, and he is not a security researcher. He still rebuilt the order that 1.52 million ballots were cast in, using files any member of the public can request and about 20 dollars of agent time. This week's Friday 5"},{"t":"2026-09-11T11:30","k":"post","r":24,"c":0,"p":0,"m":"image","x":"I will NEVER forget. My heart breaks for the families who lost loved ones on that tragic day."},{"t":"2026-09-11T17:28","k":"repost","r":2,"c":2,"p":1,"m":"link","x":"YHBW - You Have Been Warned is coming closer to launch. All of those crimes that get reported but never get prosecuted or make it to the public records phase? How many investigators like me would love to have that information, even if it ca"},{"t":"2026-09-11T20:30","k":"post","r":7,"c":1,"p":1,"m":"image","x":"New course from My OSINT Training! I have taken many courses from MOT and they are great, go check this one out! ---> https://lnkd.in/ezSCjpPy hashtag #OSINT"}]</script>
+<script>
+(function () {
+  const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const THIN = 3;                       // below this many events, an average is anecdote
+  const raw = JSON.parse(document.getElementById("data").textContent || "[]");
+
+  const events = raw.map(e => {
+    const d = new Date(e.t);            // t is already local time, no zone math
+    return {
+      date: e.t.slice(0, 10),
+      hour: d.getHours(),
+      min: d.getMinutes(),
+      dow: (d.getDay() + 6) % 7,        // Monday first
+      kind: e.k, reactions: e.r || 0, comments: e.c || 0,
+      reposts: e.p || 0, media: e.m || "text", text: e.x || ""
+    };
+  }).sort((a, b) => a.date.localeCompare(b.date) || a.hour - b.hour);
+
+  if (!events.length) {
+    document.getElementById("hero-say").textContent =
+      "No events are embedded yet. Run: npm run collect";
+    return;
+  }
+
+  const pad = n => String(n).padStart(2, "0");
+  const hourLabel = h => pad(h) + ":00";
+
+  /* ---- aggregates ------------------------------------------------------ */
+  const byHour = Array(24).fill(0);
+  const reachByHour = Array.from({ length: 24 }, () => []);
+  const cells = Array.from({ length: 7 }, () => Array(24).fill(0));
+  const byDate = new Map();
+
+  for (const e of events) {
+    byHour[e.hour]++;
+    reachByHour[e.hour].push(e.reactions);
+    cells[e.dow][e.hour]++;
+    byDate.set(e.date, (byDate.get(e.date) || 0) + 1);
+  }
+
+  const dates = [...byDate.keys()].sort();
+  const first = new Date(dates[0] + "T12:00");
+  const last = new Date(dates[dates.length - 1] + "T12:00");
+  const spanDays = Math.round((last - first) / 86400000) + 1;
+
+  /* The two busiest four-hour windows, disjoint, found rather than assumed. */
+  const windowTotal = start => [0, 1, 2, 3].reduce((s, i) => s + byHour[(start + i) % 24], 0);
+  const bestWindow = exclude => {
+    let best = null;
+    for (let h = 0; h < 24; h++) {
+      const hrs = [0, 1, 2, 3].map(i => (h + i) % 24);
+      if (exclude && hrs.some(x => exclude.includes(x))) continue;
+      const total = windowTotal(h);
+      if (!best || total > best.total) best = { start: h, hrs, total };
+    }
+    return best;
+  };
+  const w1 = bestWindow(null);
+  const w2 = bestWindow(w1.hrs) || { hrs: [], total: 0 };
+  const windowHours = [...w1.hrs, ...w2.hrs];
+  const windowShare = Math.round(((w1.total + w2.total) / events.length) * 100);
+
+  const weekdayShare = Math.round(
+    events.filter(e => e.dow < 5).length / events.length * 100);
+  const busiestHour = byHour.indexOf(Math.max(...byHour));
+  const avgAt = h => reachByHour[h].length
+    ? reachByHour[h].reduce((a, b) => a + b, 0) / reachByHour[h].length : 0;
+  const solidHours = [...Array(24).keys()].filter(h => reachByHour[h].length >= THIN);
+  const bestReachHour = solidHours.sort((a, b) => avgAt(b) - avgAt(a))[0];
+  const maxCell = Math.max(...cells.flat());
+
+  /* ---- masthead + hero ------------------------------------------------- */
+  const fmt = d => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  document.getElementById("m-window").textContent = `${fmt(first)} – ${fmt(last)}, ${spanDays} days`;
+  document.getElementById("m-count").textContent = `${events.length} events`;
+  document.getElementById("m-tz").textContent =
+    Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  document.getElementById("hero-value").textContent = windowShare + "%";
+  document.getElementById("hero-say").textContent =
+    `of everything published lands in just two four-hour windows. The rest of the
+     day — sixteen hours of it — carries the remaining ${100 - windowShare}%.`;
+
+  const winBox = document.getElementById("hero-windows");
+  for (const w of [w1, w2]) {
+    if (!w.hrs.length) continue;
+    const el = document.createElement("span");
+    el.className = "pill";
+    el.innerHTML = `<b>${hourLabel(w.hrs[0])}–${hourLabel((w.hrs[3] + 1) % 24)}</b> · ${w.total} events`;
+    winBox.appendChild(el);
+  }
+
+  const tiles = [
+    { label: "Days with activity", value: `${byDate.size}`, note: `of ${spanDays}; ${spanDays - byDate.size} silent` },
+    { label: "On weekdays", value: `${weekdayShare}%`, note: "Monday through Friday" },
+    { label: "Busiest hour", value: hourLabel(busiestHour), note: `${byHour[busiestHour]} events` },
+    { label: "Strongest hour", value: hourLabel(bestReachHour), note: `${Math.round(avgAt(bestReachHour))} reactions on average` }
+  ];
+  document.getElementById("tiles").innerHTML = tiles.map(t => `
+    <div class="tile">
+      <div class="label">${t.label}</div>
+      <div class="value">${t.value}</div>
+      <div class="note">${t.note}</div>
+    </div>`).join("");
+
+  /* ---- tooltip --------------------------------------------------------- */
+  const tip = document.getElementById("tip");
+  const bindTip = (el, text) => {
+    el.addEventListener("mousemove", ev => {
+      tip.textContent = text;
+      tip.style.opacity = "1";
+      tip.style.left = Math.min(ev.clientX + 14, innerWidth - tip.offsetWidth - 8) + "px";
+      tip.style.top = (ev.clientY - tip.offsetHeight - 10) + "px";
+    });
+    el.addEventListener("mouseleave", () => { tip.style.opacity = "0"; });
+  };
+
+  /* ---- heatmap --------------------------------------------------------- */
+  const grid = document.getElementById("grid");
+  grid.appendChild(document.createElement("div"));
+  for (let h = 0; h < 24; h++) {
+    const el = document.createElement("div");
+    el.className = "hlab";
+    el.textContent = h % 3 === 0 ? pad(h) : "";
+    grid.appendChild(el);
+  }
+  for (let d = 0; d < 7; d++) {
+    const lab = document.createElement("div");
+    lab.className = "dlab";
+    lab.textContent = DAYS[d];
+    grid.appendChild(lab);
+    for (let h = 0; h < 24; h++) {
+      const n = cells[d][h];
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.n = Math.min(n, 4);
+      bindTip(cell, `${DAYS[d]} ${hourLabel(h)} — ${n} event${n === 1 ? "" : "s"}`);
+      grid.appendChild(cell);
+    }
+  }
+  const band = document.createElement("div");
+  band.className = "band";
+  for (let h = 0; h < 24; h++) {
+    const s = document.createElement("span");
+    if (windowHours.includes(h)) s.className = "on";
+    band.appendChild(s);
+  }
+  grid.appendChild(band);
+
+  const sw = document.getElementById("legend-swatches");
+  ["var(--c0)", "var(--c1)", "var(--c2)", "var(--c3)", "var(--c4)"].forEach(c => {
+    const i = document.createElement("i");
+    i.style.background = c;
+    sw.appendChild(i);
+  });
+  document.getElementById("legend-max").textContent = `0 → ${maxCell}+`;
+
+  /* ---- matrix table ---------------------------------------------------- */
+  const matrix = document.getElementById("matrix");
+  matrix.innerHTML =
+    "<tr><th>Day</th>" + [...Array(24).keys()].map(h => `<th class="num">${pad(h)}</th>`).join("") + "<th class='num'>All</th></tr>" +
+    DAYS.map((d, i) =>
+      `<tr><th>${d}</th>` +
+      cells[i].map(n => `<td class="num">${n || ""}</td>`).join("") +
+      `<td class="num"><b>${cells[i].reduce((a, b) => a + b, 0)}</b></td></tr>`).join("");
+
+  /* ---- column charts --------------------------------------------------- */
+  function columns(node, axisNode, values, opts) {
+    const { max, labelEvery, format, thin, labelIndex } = opts;
+    node.style.gridTemplateColumns = `repeat(${values.length}, 1fr)`;
+    node.style.height = (opts.height || 150) + "px";
+    axisNode.style.gridTemplateColumns = `repeat(${values.length}, 1fr)`;
+    node.innerHTML = "";
+    axisNode.innerHTML = "";
+
+    values.forEach((v, i) => {
+      const col = document.createElement("div");
+      col.className = "col" + (v === 0 ? " empty" : (thin && thin(i) ? " thin" : ""));
+      const bar = document.createElement("div");
+      bar.className = "bar";
+      bar.style.height = (v === 0 ? 2 : Math.max(3, (v / max) * 100) ) + (v === 0 ? "px" : "%");
+      col.appendChild(bar);
+      if (i === labelIndex) {
+        const lab = document.createElement("div");
+        lab.className = "vlabel";
+        lab.textContent = format(v);
+        col.appendChild(lab);
+      }
+      bindTip(col, opts.tip(i, v));
+      node.appendChild(col);
+
+      const ax = document.createElement("div");
+      ax.textContent = labelEvery(i);
+      axisNode.appendChild(ax);
+    });
+  }
+
+  const maxVol = Math.max(...byHour);
+  columns(document.getElementById("vol"), document.getElementById("vol-axis"), byHour, {
+    max: maxVol, height: 140,
+    labelIndex: byHour.indexOf(maxVol),
+    format: v => `${v} events`,
+    labelEvery: i => i % 3 === 0 ? pad(i) : "",
+    tip: (i, v) => `${hourLabel(i)} — ${v} event${v === 1 ? "" : "s"}`
+  });
+
+  const avgs = [...Array(24).keys()].map(h => Math.round(avgAt(h) * 10) / 10);
+  const maxAvg = Math.max(...avgs);
+  columns(document.getElementById("reach"), document.getElementById("reach-axis"), avgs, {
+    max: maxAvg, height: 140,
+    labelIndex: avgs.indexOf(maxAvg),
+    thin: i => reachByHour[i].length < THIN,
+    format: v => `${v} avg`,
+    labelEvery: i => i % 3 === 0 ? pad(i) : "",
+    tip: (i, v) => `${hourLabel(i)} — ${v} avg reactions over ${reachByHour[i].length} event${reachByHour[i].length === 1 ? "" : "s"}`
+  });
+  document.getElementById("thin-note").textContent =
+    `Lighter bars are thin hours: fewer than ${THIN} events behind the average.`;
+
+  /* ---- cadence --------------------------------------------------------- */
+  const series = [];
+  for (let i = 0; i < spanDays; i++) {
+    const d = new Date(first.getTime() + i * 86400000);
+    const key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    series.push({ key, n: byDate.get(key) || 0, d });
+  }
+  const maxDay = Math.max(...series.map(s => s.n));
+  columns(document.getElementById("cadence"), document.getElementById("cadence-axis"),
+    series.map(s => s.n), {
+      max: maxDay, height: 130,
+      labelIndex: series.findIndex(s => s.n === maxDay),
+      format: v => `${v} in a day`,
+      labelEvery: i => series[i].d.getDate() === 1 || i === 0 || i % 5 === 0
+        ? series[i].d.getDate() : "",
+      tip: (i, v) => `${series[i].d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} — ${v} event${v === 1 ? "" : "s"}`
+    });
+
+  /* ---- event log ------------------------------------------------------- */
+  document.getElementById("log").innerHTML =
+    "<tr><th>Date</th><th>Time</th><th>Kind</th><th class='num'>Reactions</th>" +
+    "<th class='num'>Comments</th><th class='num'>Reposts</th><th>Media</th><th>Opening</th></tr>" +
+    events.map(e => `<tr>
+      <td>${e.date}</td>
+      <td>${pad(e.hour)}:${pad(e.min)}</td>
+      <td>${e.kind}</td>
+      <td class="num">${e.reactions}</td>
+      <td class="num">${e.comments}</td>
+      <td class="num">${e.reposts}</td>
+      <td>${e.media}</td>
+      <td class="text">${e.text.replace(/</g, "&lt;").slice(0, 120)}</td>
+    </tr>`).join("");
+
+  document.getElementById("foot-gen").textContent =
+    `Rendered ${new Date().toLocaleString()} from ${events.length} collected events.`;
+})();
+</script>
+</body>
+</html>

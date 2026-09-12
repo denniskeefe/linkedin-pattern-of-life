@@ -128,6 +128,26 @@ body {
   color: var(--accent);
 }
 
+/* Back to the research console. Present only in a locally rendered subject
+   report — the published copy has no console to return to. */
+.back {
+  align-self: flex-start;
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  text-decoration: none;
+  margin-bottom: -6px;
+}
+
+.back:hover { color: var(--accent); }
+
+.back:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.back[hidden] { display: none !important; }
+
 h1 {
   font-family: var(--f-display);
   font-weight: 600;
@@ -465,6 +485,9 @@ td.txt { color: var(--ink-2); min-width: 230px; }
 
   body { background: #fff; font-size: 13px; }
 
+  /* Navigation is screen furniture; a printed report has nowhere to click to. */
+  .back { display: none; }
+
   .wrap {
     max-width: 100%;
     padding: 0;
@@ -500,6 +523,7 @@ td.txt { color: var(--ink-2); min-width: 230px; }
 <div class="wrap">
 
   <header class="masthead">
+    <a class="back" id="m-back" href="../index.html" hidden>&larr; All subjects</a>
     <div class="eyebrow" id="m-eyebrow">Pattern-of-life analysis</div>
     <h1>LinkedIn Pattern of Life</h1>
     <p class="dek" id="m-dek"></p>
@@ -684,6 +708,12 @@ td.txt { color: var(--ink-2); min-width: 230px; }
     "-day collection window, placed by exact publication time. Timestamps are decoded from " +
     "LinkedIn's own activity identifiers, so they are precise to the second — not the " +
     "“3w ago” the feed shows you.";
+
+  var back = document.getElementById("m-back");
+  if (META.console) {
+    back.href = META.console;
+    back.hidden = false;
+  }
 
   var subjectCell = document.getElementById("f-subject");
   if (META.url) {

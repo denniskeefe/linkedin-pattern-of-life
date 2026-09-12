@@ -1,0 +1,984 @@
+<title>LinkedIn Research Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+
+<style>
+:root {
+  color-scheme: light;
+  --bg:          #f4f6f8;
+  --surface:     #ffffff;
+  --surface-2:   #eef1f5;
+  --line:        #d8dee7;
+  --line-soft:   #e6eaf0;
+  --ink:         #11161d;
+  --ink-2:       #4a5462;
+  --ink-3:       #78828f;
+  --accent:      #2a78d6;
+  --accent-2:    #eb6834;
+  --accent-weak: #e7f0fc;
+  --warn-weak:   #fdf0e8;
+  --shadow: 0 1px 2px rgba(17,22,29,.05), 0 8px 24px -14px rgba(17,22,29,.18);
+
+  --f-display: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --f-body: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg:          #101319;
+    --surface:     #171c24;
+    --surface-2:   #1e242e;
+    --line:        #2c3543;
+    --line-soft:   #232a34;
+    --ink:         #e9edf3;
+    --ink-2:       #a5b0bf;
+    --ink-3:       #7b8697;
+    --accent:      #3987e5;
+    --accent-2:    #e8783f;
+    --accent-weak: #17263c;
+    --warn-weak:   #2a1d14;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.8);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:          #101319;
+  --surface:     #171c24;
+  --surface-2:   #1e242e;
+  --line:        #2c3543;
+  --line-soft:   #232a34;
+  --ink:         #e9edf3;
+  --ink-2:       #a5b0bf;
+  --ink-3:       #7b8697;
+  --accent:      #3987e5;
+  --accent-2:    #e8783f;
+  --accent-weak: #17263c;
+  --warn-weak:   #2a1d14;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -16px rgba(0,0,0,.8);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* ---------- header ---------- */
+
+.masthead {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 24px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.eyebrow {
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+h1 {
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: clamp(28px, 5vw, 40px);
+  line-height: 1.08;
+  letter-spacing: -.015em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.dek {
+  margin: 0;
+  max-width: 64ch;
+  color: var(--ink-2);
+  font-size: 16px;
+}
+
+/* ---------- search field ---------- */
+
+.search {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+label.lbl {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.field {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.field:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-weak);
+}
+
+.field .pre {
+  display: flex;
+  align-items: center;
+  padding: 0 4px 0 14px;
+  font-family: var(--f-mono);
+  font-size: 14px;
+  color: var(--ink-3);
+  white-space: nowrap;
+  user-select: none;
+}
+
+#q {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--f-mono);
+  font-size: 15px;
+  padding: 14px 12px 14px 2px;
+}
+
+#q::placeholder { color: var(--ink-3); }
+
+.field button.clear {
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  font-family: var(--f-mono);
+  font-size: 16px;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.field button.clear:hover { color: var(--ink); }
+.field button.clear[hidden] { display: none !important; }
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.hint code {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 2px;
+  padding: 1px 4px;
+}
+
+/* Hosted build only: the commands below run inside the repo, so say where it is. */
+.repo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 13px;
+  color: var(--ink-2);
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  padding: 10px 13px;
+}
+
+.repo code {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.repo a { color: var(--accent); text-decoration: none; }
+.repo a:hover { text-decoration: underline; }
+.repo[hidden], .collected[hidden] { display: none !important; }
+
+/* ---------- result card ---------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 3px;
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card.bad { border-left-color: var(--accent-2); }
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+}
+
+.card-head h2 {
+  font-family: var(--f-display);
+  font-size: 21px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -.01em;
+}
+
+.card-head .slug {
+  font-family: var(--f-mono);
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.card p { margin: 0; color: var(--ink-2); font-size: 14px; }
+
+.card p.bad { color: var(--accent-2); }
+
+.tag {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+}
+
+.tag.self { background: var(--accent-weak); color: var(--accent); border-color: transparent; }
+.tag.third { background: var(--warn-weak); color: var(--accent-2); border-color: transparent; }
+
+/* ---------- steps ---------- */
+
+ol.steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+ol.steps > li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 34px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+ol.steps > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent-weak);
+  color: var(--accent);
+  font-family: var(--f-mono);
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+ol.steps .what { font-size: 14px; color: var(--ink); }
+ol.steps .what b { font-weight: 600; }
+ol.steps .why { font-size: 13px; color: var(--ink-3); }
+
+.cmd {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.cmd code {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  padding: 9px 11px;
+  overflow-x: auto;
+  white-space: pre;
+  color: var(--ink);
+}
+
+.cmd button {
+  flex: none;
+  border: 0;
+  border-left: 1px solid var(--line-soft);
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.cmd button:hover { background: var(--accent-weak); color: var(--accent); }
+.cmd button.done { color: var(--accent); }
+
+a.go {
+  align-self: flex-start;
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  color: var(--accent);
+  text-decoration: none;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 3px;
+  padding: 7px 12px;
+}
+
+a.go:hover { background: var(--accent-weak); border-color: var(--accent); }
+
+a.go:focus-visible, .cmd button:focus-visible, button.clear:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- knobs ---------- */
+
+.knobs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  padding: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--line-soft);
+  border-radius: 3px;
+}
+
+.knob { display: flex; flex-direction: column; gap: 5px; }
+
+.knob input {
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--f-mono);
+  font-size: 13px;
+  padding: 7px 9px;
+  min-width: 0;
+}
+
+.knob input:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+/* ---------- subject list ---------- */
+
+section.collected { display: flex; flex-direction: column; gap: 12px; }
+
+.sec-head h2 {
+  font-family: var(--f-display);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  letter-spacing: -.01em;
+}
+
+.sec-head p { margin: 0; font-size: 14px; color: var(--ink-2); max-width: 64ch; }
+
+ul.subjects { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+ul.subjects li {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 12px 15px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+ul.subjects .name { font-weight: 600; font-size: 15px; }
+
+ul.subjects .slug {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+ul.subjects .spacer { flex: 1; }
+
+ul.subjects .count {
+  font-family: var(--f-mono);
+  font-size: 12.5px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+ul.subjects a.open {
+  font-family: var(--f-mono);
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+ul.subjects a.open:hover { border-bottom-color: var(--accent); }
+
+p.empty {
+  margin: 0;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: 3px;
+  color: var(--ink-3);
+  font-size: 14px;
+}
+
+/* ---------- notes ---------- */
+
+.notes {
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notes h2 {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin: 0;
+}
+
+.notes p { margin: 0; font-size: 13px; color: var(--ink-2); max-width: 72ch; }
+
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--f-mono);
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: 3px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .16s, transform .16s;
+}
+
+#toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Collection launcher</div>
+    <h1>Research a LinkedIn profile</h1>
+    <p class="dek" id="dek">Paste any LinkedIn profile URL. The field resolves it to a subject
+      slug, tells you whether that profile has already been collected, and lays out the exact
+      steps to collect it if it hasn't.</p>
+    <div class="repo" id="repo" hidden>
+      <span>The steps below run inside the repo:</span>
+      <code>git clone <a id="repo-link" href="#" target="_blank" rel="noopener noreferrer"></a></code>
+    </div>
+  </header>
+
+  <div class="search">
+    <label class="lbl" for="q">Profile URL or slug</label>
+    <div class="field">
+      <span class="pre">linkedin.com/in/</span>
+      <input id="q" type="text" spellcheck="false" autocomplete="off" autocapitalize="off"
+             placeholder="paste a profile URL, or type a slug" aria-describedby="hint">
+      <button class="clear" id="clear" type="button" title="Clear" hidden>&times;</button>
+    </div>
+    <p class="hint" id="hint">Full URLs are fine — <code>recent-activity</code> paths and
+      tracking parameters are stripped. Typing also filters the collected subjects below.</p>
+  </div>
+
+  <div id="result"></div>
+
+  <section class="collected">
+    <div class="sec-head">
+      <h2>Collected subjects</h2>
+      <p id="collected-sub"></p>
+    </div>
+    <div id="list"></div>
+  </section>
+
+  <div class="notes">
+    <h2>Before you collect someone</h2>
+    <p><b>LinkedIn's terms prohibit automated collection.</b> The practical exposure is
+      restriction of the account doing the collecting — yours.</p>
+    <p><b>Individual pattern-of-life needs a basis.</b> These reports map when a named person is
+      reliably reachable and, more usefully to the wrong reader, when they are not. Inside an
+      authorized engagement that is a finding; outside one it is something else, and the data
+      having been public does not change which.</p>
+    <p><b>Collected subjects stay local.</b> <code>subjects/</code> is gitignored and
+      <code>--publish</code> refuses any subject not marked <code>--self</code>.</p>
+  </div>
+
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script id="data" type="application/json">{"generated":"2026-09-11 20:10","defaults":{"tz":"America/Chicago","days":30},"scrape":"/* LinkedIn activity collector.\n *\n * Paste into the DevTools console on a recent-activity page:\n *   https://www.linkedin.com/in/<slug>/recent-activity/all/\n *\n * Then drive it:\n *   await lkCollect({ days: 30 })   // one pass\n *   await lkCollect({ days: 30 })   // run 2-3 times; results accumulate\n *   copy(lkExport())                // pipe-delimited, for analyze.py\n *\n * Paste the clipboard into subjects/<slug>/raw.psv. lkSubject() prints the slug\n * and the exact path. Switching profiles means reloading the page, so reset\n * first: lkReset() \u2014 otherwise the store still holds the previous subject.\n *\n * Two things about this feed shape the design:\n *\n * 1. It virtualizes. Cards scrolled out of view are removed from the DOM, so\n *    reading once at the end returns only what happens to be on screen.\n *    Everything here harvests on every scroll tick instead.\n *\n * 2. It paginates non-deterministically. Two passes over the same date range\n *    return overlapping but non-identical sets. Run several passes and take the\n *    union; treat the total as a floor, not a complete census.\n *\n * Exact publication times come from the activity id, not the feed's \"3w ago\"\n * labels: the id is a snowflake whose high 41 bits are the epoch milliseconds.\n */\n\nwindow.lkStore = window.lkStore || new Map();\n\n/* The profile slug this page belongs to. Collecting a second subject without\n   resetting would silently merge two people's activity into one file. */\nfunction lkSubject() {\n  const slug = (location.pathname.match(/\\/in\\/([^/]+)/) || [])[1] || \"unknown\";\n  console.log(\"subject: \" + slug + \"  ->  subjects/\" + slug + \"/raw.psv\");\n  return slug;\n}\n\nfunction lkReset() {\n  window.lkStore = new Map();\n  console.log(\"store cleared\");\n}\n\nfunction lkParseCount(s) {\n  if (!s) return 0;\n  const m = String(s).replace(/,/g, \"\").match(/([\\d.]+)\\s*([KMkm])?/);\n  if (!m) return 0;\n  let v = parseFloat(m[1]);\n  if (/k/i.test(m[2] || \"\")) v *= 1e3;\n  if (/m/i.test(m[2] || \"\")) v *= 1e6;\n  return Math.round(v);\n}\n\n/* Read every activity card currently in the DOM into the store. Safe to call\n   repeatedly; later reads only overwrite a field when they see more of it. */\nfunction lkHarvest(cutoffMs) {\n  const cards = document.querySelectorAll(\n    '[data-urn^=\"urn:li:activity\"],[data-id^=\"urn:li:activity\"]'\n  );\n\n  for (const card of cards) {\n    const urn = card.getAttribute(\"data-urn\") || card.getAttribute(\"data-id\");\n    const id = (urn.match(/urn:li:activity:(\\d+)/) || [])[1];\n    if (!id) continue;\n\n    const ts = Number(BigInt(id) >> 22n);\n    if (ts < cutoffMs) continue;\n\n    const full = (card.innerText || \"\").replace(/\\s+/g, \" \").trim();\n    const header = full.slice(0, 200).toLowerCase();\n    let kind = \"post\";\n    if (/\\breposted\\b/.test(header)) kind = \"repost\";\n    else if (/\\bcommented on\\b|\\breplied to\\b/.test(header)) kind = \"comment\";\n\n    // Social counts render as e.g. \"8 Kevin Branzetti and 7 others 2 comments\".\n    // The leading bare number is the reaction count.\n    const socialEl = card.querySelector(\".social-details-social-counts\");\n    const social = socialEl ? socialEl.innerText.replace(/\\s+/g, \" \").trim() : \"\";\n    const leading = (social.match(/^\\s*([\\d.,]+[KMkm]?)\\b(?!\\s*(comment|repost))/) || [])[1];\n\n    const bodyEl = card.querySelector(\n      \".update-components-text, .feed-shared-inline-show-more-text\"\n    );\n    const body = (bodyEl ? bodyEl.innerText : \"\")\n      .replace(/\\s+/g, \" \")\n      .replace(/\u2026more$/, \"\")\n      .trim();\n\n    const media =\n      card.querySelector(\"video, .update-components-linkedin-video\") ? \"video\"\n      : card.querySelector('.update-components-document, iframe[title*=\"document\" i]') ? \"document\"\n      : card.querySelector(\".update-components-image, img.update-components-image__image\") ? \"image\"\n      : card.querySelector(\".update-components-article, .update-components-entity\") ? \"link\"\n      : \"text\";\n\n    const next = {\n      id, ts, kind, media,\n      reactions: lkParseCount(leading),\n      comments: lkParseCount((social.match(/([\\d.,]+[KMkm]?)\\s*comment/i) || [])[1]),\n      reposts: lkParseCount((social.match(/([\\d.,]+[KMkm]?)\\s*repost/i) || [])[1]),\n      words: body ? body.split(/\\s+/).length : 0,\n      text: body.slice(0, 240),\n      url: \"https://www.linkedin.com/feed/update/urn:li:activity:\" + id + \"/\"\n    };\n\n    // A card can be caught mid-render, with counts or body text not yet filled\n    // in. Keep the fullest reading of each field rather than the latest.\n    const prev = window.lkStore.get(id);\n    window.lkStore.set(id, !prev ? next : {\n      ...next,\n      reactions: Math.max(prev.reactions, next.reactions),\n      comments: Math.max(prev.comments, next.comments),\n      reposts: Math.max(prev.reposts, next.reposts),\n      words: Math.max(prev.words, next.words),\n      text: next.text.length > prev.text.length ? next.text : prev.text\n    });\n  }\n\n  return window.lkStore.size;\n}\n\n/* One top-to-bottom pass. Steps are deliberately small: larger jumps let the\n   feed recycle a card in and out between ticks, and it is never harvested. */\nasync function lkCollect(opts) {\n  const { days = 30, step = 350, pause = 450, maxTicks = 400 } = opts || {};\n  const cutoff = Date.now() - days * 86400000;\n  const sleep = ms => new Promise(r => setTimeout(r, ms));\n\n  window.scrollTo(0, 0);\n  await sleep(1500);\n\n  let y = 0;\n  let quiet = 0;\n  let lastHeight = 0;\n\n  for (let tick = 0; tick < maxTicks; tick++) {\n    lkHarvest(cutoff);\n\n    // Stop once the oldest card on screen predates the window.\n    const onScreen = [...document.querySelectorAll(\n      '[data-urn^=\"urn:li:activity\"],[data-id^=\"urn:li:activity\"]'\n    )].map(c => {\n      const u = c.getAttribute(\"data-urn\") || c.getAttribute(\"data-id\");\n      const m = u.match(/urn:li:activity:(\\d+)/);\n      return m ? Number(BigInt(m[1]) >> 22n) : Infinity;\n    });\n    if (onScreen.length && Math.min(...onScreen) < cutoff) break;\n\n    y += step;\n    window.scrollTo(0, y);\n    await sleep(pause);\n\n    for (const b of document.querySelectorAll(\"button\")) {\n      const label = (b.innerText || \"\").trim().toLowerCase();\n      if (label.includes(\"show more results\") || label === \"load more\") { b.click(); break; }\n    }\n\n    // The page stops growing once the feed is exhausted.\n    const h = document.body.scrollHeight;\n    quiet = h === lastHeight && y >= h ? quiet + 1 : 0;\n    lastHeight = h;\n    if (quiet >= 5) break;\n  }\n\n  lkHarvest(cutoff);\n  console.log(\"collected \" + window.lkStore.size + \" events in the last \" + days +\n              \" days for \" + lkSubject());\n  return window.lkStore.size;\n}\n\n/* Pipe-delimited, oldest first \u2014 the format analyze.py reads. */\nfunction lkExport() {\n  return [...window.lkStore.values()]\n    .sort((a, b) => a.ts - b.ts)\n    .map(e => [\n      e.ts, e.kind, e.reactions, e.comments, e.reposts, e.words, e.media,\n      e.text.replace(/[|\\n]/g, \" \")\n    ].join(\"|\"))\n    .join(\"\\n\");\n}\n","public":true,"repo":"https://github.com/denniskeefe/linkedin-pattern-of-life","subjects":[]}</script>
+
+<script>
+(function () {
+  "use strict";
+
+  var PAYLOAD = JSON.parse(document.getElementById("data").textContent);
+  var SUBJECTS = PAYLOAD.subjects || [];
+  var DEFAULTS = PAYLOAD.defaults || {};
+  var SCRAPE = PAYLOAD.scrape || "";
+
+  // The hosted build ships with no subject list: which profiles have been
+  // collected is local state, and on a public page it would be a disclosure
+  // rather than a feature. Everything that refers to that list goes with it.
+  var PUBLIC = !!PAYLOAD.public;
+
+  if (PUBLIC) {
+    document.getElementById("dek").textContent =
+      "Paste any LinkedIn profile URL. The field resolves it to a subject slug and lays out " +
+      "the exact steps to collect that profile's posting history and chart when it posts.";
+    document.getElementById("hint").innerHTML =
+      "Full URLs are fine — <code>recent-activity</code> paths and tracking parameters are " +
+      "stripped. Nothing you type is sent anywhere; this page runs entirely in your browser.";
+    document.querySelector("section.collected").hidden = true;
+    if (PAYLOAD.repo) {
+      var repo = document.getElementById("repo");
+      var a = document.getElementById("repo-link");
+      a.href = PAYLOAD.repo;
+      a.textContent = PAYLOAD.repo.replace(/^https:\/\//, "") + ".git";
+      repo.hidden = false;
+    }
+  }
+
+  var BY_SLUG = {};
+  SUBJECTS.forEach(function (s) { BY_SLUG[s.slug.toLowerCase()] = s; });
+
+  // ---------- subject resolution ----------
+  // Mirrors parse_subject() in analyze.py: the same inputs resolve to the same
+  // slug and the same things get rejected, so the page never hands you a command
+  // the CLI will turn around and refuse.
+  var SLUG = /^[A-Za-z0-9\-_%\u00C0-\uFFFF]{1,120}$/;
+  var PROFILE_PATH = /\/in\/([^/?#]+)/i;
+  var COMPANY_PATH = /\/(company|school|showcase)\/([^/?#]+)/i;
+
+  function resolve(value) {
+    var raw = (value || "").trim();
+    if (!raw) return { state: "empty" };
+
+    // A pasted "linkedin.com/in/x" has no scheme but is still path-shaped.
+    var slug;
+    if (raw.indexOf("/") !== -1) {
+      var company = COMPANY_PATH.exec(raw);
+      if (company && !PROFILE_PATH.test(raw)) {
+        return { state: "bad", why: "That is a " + company[1] + " page, not a member profile. " +
+                                    "This tool reads /in/<slug> activity feeds only." };
+      }
+      var match = PROFILE_PATH.exec(raw);
+      if (!match) {
+        return { state: "bad", why: "No /in/<slug> in that link. Paste a member profile URL " +
+                                    "such as linkedin.com/in/<slug>/, or just the slug." };
+      }
+      slug = match[1];
+    } else {
+      slug = raw;
+    }
+
+    try { slug = decodeURIComponent(slug); } catch (e) { /* leave escapes as-is */ }
+    slug = slug.trim();
+
+    if (!slug || !SLUG.test(slug)) {
+      return { state: "bad", why: "Could not read a profile slug out of that. Pass the slug, " +
+                                  "or a profile URL such as linkedin.com/in/<slug>/." };
+    }
+
+    var known = BY_SLUG[slug.toLowerCase()];
+    return { state: known ? "known" : "new", slug: slug, subject: known || null };
+  }
+
+  // ---------- DOM helpers ----------
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  var toastTimer;
+  function toast(msg) {
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("on"); }, 1600);
+  }
+
+  // Clipboard API is unavailable on file:// in some browsers; fall back to a
+  // throwaway textarea so the copy buttons work however the page was opened.
+  function copy(text, btn, what) {
+    function ok() {
+      toast(what + " copied");
+      if (!btn) return;
+      var was = btn.textContent;
+      btn.textContent = "copied";
+      btn.classList.add("done");
+      setTimeout(function () { btn.textContent = was; btn.classList.remove("done"); }, 1400);
+    }
+    function legacy() {
+      var ta = el("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      var done = false;
+      try { done = document.execCommand("copy"); } catch (e) { done = false; }
+      document.body.removeChild(ta);
+      done ? ok() : toast("copy blocked — select the text manually");
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok, legacy);
+    } else {
+      legacy();
+    }
+  }
+
+  // `payload` is what lands on the clipboard when it differs from what is shown —
+  // the collector step displays a one-line summary but copies all of scrape.js.
+  function cmd(text, what, payload) {
+    var row = el("div", "cmd");
+    row.appendChild(el("code", null, text));
+    var btn = el("button", null, "copy");
+    btn.type = "button";
+    btn.addEventListener("click", function () {
+      copy(payload == null ? text : payload, btn, what || "command");
+    });
+    row.appendChild(btn);
+    return row;
+  }
+
+  function step(what, why, node) {
+    var li = el("li");
+    var w = el("div", "what");
+    w.innerHTML = what;
+    li.appendChild(w);
+    if (why) li.appendChild(el("div", "why", why));
+    if (node) li.appendChild(node);
+    return li;
+  }
+
+  function link(href, text) {
+    var a = el("a", "go", text);
+    a.href = href;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    return a;
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // ---------- generated commands ----------
+  var knobs = { days: DEFAULTS.days || 30, label: "", tz: "" };
+
+  function shellQuote(s) { return '"' + String(s).replace(/(["\\$`])/g, "\\$1") + '"'; }
+
+  function analyzeCmd(slug) {
+    var parts = ["python3 analyze.py --subject " + slug];
+    if (knobs.label.trim()) parts.push("--label " + shellQuote(knobs.label.trim()));
+    if (knobs.tz.trim()) parts.push("--tz " + knobs.tz.trim());
+    return parts.join(" ");
+  }
+
+  function collectCmd() {
+    var days = parseInt(knobs.days, 10);
+    if (!(days > 0)) days = DEFAULTS.days || 30;
+    return "lkReset()\nawait lkCollect({ days: " + days + " })";
+  }
+
+  function knobRow(slug) {
+    var box = el("div", "knobs");
+    [
+      { key: "days",  label: "Days to collect", ph: String(DEFAULTS.days || 30) },
+      { key: "label", label: "Display name",    ph: slug },
+      { key: "tz",    label: "Report timezone", ph: DEFAULTS.tz || "America/Chicago" }
+    ].forEach(function (k) {
+      var wrap = el("div", "knob");
+      var lab = el("label", "lbl", k.label);
+      var id = "knob-" + k.key;
+      lab.setAttribute("for", id);
+      var input = el("input");
+      input.id = id;
+      input.type = k.key === "days" ? "number" : "text";
+      if (k.key === "days") { input.min = "1"; input.max = "3650"; }
+      input.placeholder = k.ph;
+      input.value = knobs[k.key];
+      input.addEventListener("input", function () {
+        knobs[k.key] = input.value;
+        render(document.getElementById("q").value, { keepFocus: id });
+      });
+      wrap.appendChild(lab);
+      wrap.appendChild(input);
+      box.appendChild(wrap);
+    });
+    return box;
+  }
+
+  // ---------- result card ----------
+  function collectSteps(slug) {
+    var activity = "https://www.linkedin.com/in/" + encodeURIComponent(slug) +
+                   "/recent-activity/all/";
+    var steps = el("ol", "steps");
+
+    steps.appendChild(step(
+      "Open the activity feed for <b>" + esc(slug) + "</b>.",
+      "Opens in a new tab. You need to be signed in to LinkedIn to see it.",
+      link(activity, "linkedin.com/in/" + slug + "/recent-activity/all/  \u2197")
+    ));
+
+    steps.appendChild(step(
+      "Paste the collector into the DevTools console.",
+      "Cmd+Option+J opens the console. This is scrape.js, inlined here so you don't have to go find it.",
+      cmd("// scrape.js \u2014 " + SCRAPE.split("\n").length +
+          " lines, copied in full", "scrape.js", SCRAPE)
+    ));
+
+    steps.appendChild(step(
+      "Run two or three passes.",
+      "The feed paginates non-deterministically, so a single pass misses roughly a quarter of " +
+      "the window. Run lkCollect again — results accumulate into one store.",
+      cmd(collectCmd(), "collect command")
+    ));
+
+    steps.appendChild(step(
+      "Copy the result and save it to <code>subjects/" + esc(slug) + "/raw.psv</code>.",
+      null,
+      cmd("copy(lkExport())", "export command")
+    ));
+
+    steps.appendChild(step(
+      "Analyze and render the report.",
+      "Writes subjects/" + slug + "/index.html, and refreshes this page's subject list.",
+      cmd(analyzeCmd(slug), "analyze command")
+    ));
+
+    return steps;
+  }
+
+  function renderResult(res) {
+    var host = document.getElementById("result");
+    host.textContent = "";
+    if (res.state === "empty") return;
+
+    var card = el("div", "card" + (res.state === "bad" ? " bad" : ""));
+
+    if (res.state === "bad") {
+      var head = el("div", "card-head");
+      head.appendChild(el("h2", null, "Not a member profile"));
+      card.appendChild(head);
+      card.appendChild(el("p", "bad", res.why));
+      host.appendChild(card);
+      return;
+    }
+
+    var h = el("div", "card-head");
+    var s = res.subject;
+    h.appendChild(el("h2", null, s ? s.label : res.slug));
+    h.appendChild(el("span", "slug", "/in/" + res.slug));
+    if (s) h.appendChild(el("span", "tag " + (s.self ? "self" : "third"),
+                            s.self ? "self" : "third-party"));
+    else if (!PUBLIC) h.appendChild(el("span", "tag", "not collected"));
+    card.appendChild(h);
+
+    if (s) {
+      var bits = [s.events + (s.events === 1 ? " event" : " events")];
+      if (s.window) bits.push(s.window);
+      bits.push(s.tz);
+      if (s.collected) bits.push("collected " + s.collected);
+      card.appendChild(el("p", null, bits.join("  \u00b7  ")));
+      if (s.report) {
+        var open = el("a", "go", "Open report  \u2197");
+        open.href = s.report;
+        card.appendChild(open);
+      }
+      var more = el("details");
+      more.appendChild(el("summary", null, "Collect another pass"));
+      var inner = el("div");
+      inner.style.marginTop = "14px";
+      inner.style.display = "flex";
+      inner.style.flexDirection = "column";
+      inner.style.gap = "14px";
+      var note = el("p", null,
+        "Another pass is additive: append the new lines to the existing raw.psv. Repeated " +
+        "timestamps collapse on analysis, so more passes only ever fill gaps.");
+      inner.appendChild(note);
+      inner.appendChild(knobRow(res.slug));
+      inner.appendChild(collectSteps(res.slug));
+      more.appendChild(inner);
+      card.appendChild(more);
+    } else {
+      card.appendChild(el("p", null, PUBLIC
+        ? "Five steps, about three minutes."
+        : "No data collected for this profile yet. Five steps, about three minutes."));
+      card.appendChild(knobRow(res.slug));
+      card.appendChild(collectSteps(res.slug));
+    }
+
+    host.appendChild(card);
+  }
+
+  // ---------- subject list ----------
+  function renderList(query, res) {
+    if (PUBLIC) return;
+    var host = document.getElementById("list");
+    var sub = document.getElementById("collected-sub");
+    host.textContent = "";
+
+    var count = SUBJECTS.length + (SUBJECTS.length === 1 ? " subject" : " subjects") +
+                " on this machine";
+
+    // Typed text is a search: filter on it, and say so when nothing matches.
+    // A pasted URL is not — it is a launch, and 60 characters of noise to echo
+    // back — so it leaves the list alone and lets the card above do the talking.
+    var term = (query || "").trim();
+    var q = term.indexOf("/") !== -1 ? "" : term.toLowerCase();
+
+    var hits = SUBJECTS.filter(function (s) {
+      if (!q) return true;
+      return s.slug.toLowerCase().indexOf(q) !== -1 ||
+             (s.label || "").toLowerCase().indexOf(q) !== -1;
+    });
+
+    sub.textContent = SUBJECTS.length
+      ? count + (q && hits.length !== SUBJECTS.length
+          ? " \u2014 showing " + hits.length + " matching \u201c" + term + "\u201d" : "") + "."
+      : "Nothing collected yet.";
+
+    if (!SUBJECTS.length) {
+      host.appendChild(el("p", "empty",
+        "No subjects yet. Paste a profile URL above to get the collection steps."));
+      return;
+    }
+
+    if (!hits.length) {
+      host.appendChild(el("p", "empty", "No collected subject matches that."));
+      return;
+    }
+
+    var ul = el("ul", "subjects");
+    hits.forEach(function (s) {
+      var li = el("li");
+      li.appendChild(el("span", "name", s.label));
+      li.appendChild(el("span", "slug", "/in/" + s.slug));
+      li.appendChild(el("span", "tag " + (s.self ? "self" : "third"),
+                        s.self ? "self" : "third-party"));
+      li.appendChild(el("span", "spacer"));
+      li.appendChild(el("span", "count",
+        s.events + (s.events === 1 ? " event" : " events")));
+      if (s.report) {
+        var a = el("a", "open", "report \u2197");
+        a.href = s.report;
+        li.appendChild(a);
+      }
+      ul.appendChild(li);
+    });
+    host.appendChild(ul);
+  }
+
+  // ---------- wiring ----------
+  var input = document.getElementById("q");
+  var clear = document.getElementById("clear");
+
+  function render(value, opts) {
+    clear.hidden = !value;
+    var res = resolve(value);
+    renderResult(res);
+    renderList(value, res);
+    if (opts && opts.keepFocus) {
+      var again = document.getElementById(opts.keepFocus);
+      if (again) {
+        again.focus();
+        if (again.type === "text") {
+          var n = again.value.length;
+          try { again.setSelectionRange(n, n); } catch (e) { /* number inputs refuse */ }
+        }
+      }
+    }
+  }
+
+  input.addEventListener("input", function () {
+    render(input.value);
+    var u = new URL(location.href);
+    if (input.value.trim()) u.hash = encodeURIComponent(input.value.trim());
+    else u.hash = "";
+    history.replaceState(null, "", u.toString());
+  });
+
+  clear.addEventListener("click", function () {
+    input.value = "";
+    render("");
+    history.replaceState(null, "", location.pathname + location.search);
+    input.focus();
+  });
+
+  // A slug in the fragment preselects a subject, so index.html#<slug> links work.
+  var initial = "";
+  if (location.hash.length > 1) {
+    try { initial = decodeURIComponent(location.hash.slice(1)); } catch (e) { initial = ""; }
+  }
+  input.value = initial;
+  render(initial);
+  if (!initial) input.focus();
+})();
+</script>

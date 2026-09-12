@@ -27,7 +27,40 @@ Number(BigInt("7504139249412337664") >> 22n)   // 1789126217225
 Every time in the output is decoded this way, then converted to a reporting
 timezone. No estimation, no rounding to the nearest week.
 
+## Researching a new profile
+
+`subjects/index.html` is a local launcher. Paste any LinkedIn profile URL into
+the field and it resolves the URL to a subject slug, says whether that profile
+has already been collected, and lays out the collection steps with the commands
+filled in — including `scrape.js` itself, inlined behind a copy button.
+
+```bash
+python3 analyze.py --console     # build or refresh it, then open subjects/index.html
+```
+
+It resolves URLs with the same rules as `--subject`, so it will never hand you a
+command the CLI turns around and refuses. Typing a name instead of a URL filters
+the list of already-collected subjects. Optional fields for collection window,
+display name and reporting timezone rewrite the generated commands as you type —
+timezone matters when the subject is not in yours.
+
+The console is rewritten after every `analyze.py` run, so its subject list cannot
+drift from what is on disk. It lives under `subjects/`, which is gitignored, and
+`analyze.py --subject <new-slug>` prints a direct link to it.
+
+The same page is deployed publicly, built with no subject list at all:
+
+```bash
+python3 analyze.py --publish-console     # writes research.html, which vercel.json serves
+```
+
+Which profiles someone has collected is the most sensitive thing this repo holds,
+so the hosted build ships none of it. It is the launcher and the collector, not
+anybody's data.
+
 ## Usage
+
+The console walks you through all of this; here it is in full.
 
 **1. Collect.** Open a profile's activity page and paste `scrape.js` into the
 DevTools console:
@@ -73,6 +106,7 @@ subject called `feed`.
 Each subject gets its own directory:
 
 ```
+subjects/index.html             research console — paste a URL, get the steps
 subjects/<slug>/raw.psv         collected events
 subjects/<slug>/meta.json       label, timezone, self flag — remembered
 subjects/<slug>/activity.json   parsed dataset
@@ -117,20 +151,25 @@ The practical consequence: treat event counts as a floor, not a complete census.
 
 ## Hosting
 
-The dashboard is a single self-contained file, so any static host works.
-`vercel.json` builds only the dashboard into `public/index.html` — the
-collection scripts and the raw data stay out of the deployed surface:
+**What is deployed is the console, and only the console.** `vercel.json` builds
+`research.html` into `public/index.html`. No report is hosted — not a
+third party's, and not your own.
 
 ```bash
-vercel deploy          # preview URL
-vercel deploy --prod   # production
+python3 analyze.py --publish-console   # rebuild research.html after changing console.html
+vercel deploy                          # preview URL
+vercel deploy --prod                   # production
 ```
 
-Responses are sent with `X-Robots-Tag: noindex`, so a deployment will not turn
-up in search results. That is not access control: **a Vercel URL is public to
-anyone who has it.** This page maps when a named person is reliably online and
-when they are not, so gate it with Deployment Protection rather than relying on
-an unguessable URL.
+The deployed page is a launcher: it normalizes a URL and prints commands. It has
+no backend, makes no requests, and stores nothing — whatever you type into it
+stays in your own browser. Collection still happens in your console, on your
+account.
+
+If you ever go back to hosting a rendered report, remember what one is: a map of
+when a named person is reliably online and when they are not. A Vercel URL is
+public to anyone who has it, so gate it with Deployment Protection rather than
+relying on the URL being unguessable.
 
 ## Subjects other than your own
 
@@ -138,9 +177,16 @@ The collector reads whatever activity page is open, so any profile you can view
 works the same way. Three consequences follow, and they are enforced rather than
 suggested:
 
-**Collected subjects stay local.** `subjects/` is gitignored. A third party's
-activity history does not belong in a repo, and a repo made public later is not
-a decision you want to have made by accident.
+**Collected subjects stay local.** `subjects/` is gitignored, and the deployed
+console is built with an empty subject list. A third party's activity history
+does not belong in a repo, and a repo made public later is not a decision you
+want to have made by accident.
+
+One exception, stated plainly rather than left to be discovered: this repo's own
+`subjects/dkeefe/raw.psv` was committed before that ignore rule existed, so the
+maintainer's 42 collected events are in the public history. It is self-collected
+data published knowingly. Nothing else under `subjects/` has ever been tracked,
+and `git check-ignore subjects/<slug>` will confirm that for anything you add.
 
 **`--publish` refuses non-self subjects.** Copying a report onto the deployed
 surface requires that subject to be marked `--self`. Reports on other people are
@@ -184,8 +230,10 @@ Two matters that belong to the operator, not the tool:
 | `scrape.js` | Console collector — multi-pass, virtualization-aware |
 | `analyze.py` | Per-subject summary and dashboard rendering |
 | `template.html` | The report, with an empty data slot |
+| `console.html` | The research console, with an empty subject-list slot |
+| `research.html` | The deployed console — built with no subject list |
 | `subjects/<slug>/` | One directory per collected profile — **gitignored** |
-| `dashboard.html` | Rendered copy of the published subject |
+| `dashboard.html` | Rendered copy of the self subject — committed, not deployed |
 | `make_pdf.sh` | Renders a dashboard to PDF via headless Chrome |
 
 ## The dashboard
